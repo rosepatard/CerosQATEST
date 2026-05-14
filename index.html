@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ceros QA — Reuters Plus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf9f7;
+    --white: #ffffff;
+    --ink: #1a1a18;
+    --ink2: #4a4a47;
+    --ink3: #9a9a96;
+    --ink4: #d0cfc9;
+    --orange: #e8470a;
+    --orange-light: #fff1ec;
+    --green: #1a7a4a;
+    --green-light: #edf7f2;
+    --amber: #92600a;
+    --amber-light: #fef8ec;
+    --red: #b91c1c;
+    --red-light: #fef2f2;
+    --blue: #1d4ed8;
+    --blue-light: #eff6ff;
+    --border: #e8e7e2;
+    --border2: #d0cfc9;
+    --radius: 8px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --mono: 'DM Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo { display: flex; align-items: baseline; gap: 8px; text-decoration: none; }
+  .logo-name { font-family: var(--serif); font-size: 20px; color: var(--ink); letter-spacing: -0.01em; }
+  .logo-name em { font-style: italic; color: var(--orange); }
+  .logo-by { font-size: 11px; color: var(--ink3); font-weight: 300; }
+
+  .header-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--orange-light); border: 1px solid #f4c5b0;
+    border-radius: 999px; padding: 4px 12px;
+    font-size: 11px; font-weight: 500; color: var(--orange);
+  }
+  .header-pill::before { content:''; width:6px; height:6px; background:var(--orange); border-radius:50%; }
+
+  .hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 52px 40px 48px;
+  }
+
+  .hero-inner { max-width: 1040px; margin: 0 auto; }
+
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 11px; color: var(--orange);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-eyebrow::before { content:''; display:block; width:24px; height:1px; background:var(--orange); }
+
+  .hero-title {
+    font-family: var(--serif); font-size: 48px; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 14px;
+  }
+  .hero-title em { font-style: italic; color: var(--orange); }
+
+  .hero-desc { font-size: 15px; color: var(--ink2); font-weight: 300; max-width: 560px; line-height: 1.65; }
+
+  .hero-checks { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .check-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 999px; font-size: 12px; color: var(--ink2);
+  }
+  .check-pill .dot { width:5px; height:5px; border-radius:50%; background:var(--ink3); flex-shrink:0; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 40px 80px; }
+
+  .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  .input-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .input-card:focus-within { box-shadow: var(--shadow-md); border-color: var(--border2); }
+
+  .card-top {
+    padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .card-label { font-size: 12px; font-weight: 600; color: var(--ink); }
+
+  .card-tag { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; white-space: nowrap; }
+  .card-tag.required { background: var(--orange-light); color: var(--orange); }
+  .card-tag.optional { background: var(--bg); color: var(--ink3); border: 1px solid var(--border); }
+
+  .card-hint {
+    padding: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--ink3);
+    border-bottom: 1px solid var(--border); min-height: 36px;
+    display: flex; align-items: center; background: var(--bg); word-break: break-all; line-height: 1.5;
+  }
+  .card-hint a { color: var(--blue); text-decoration: none; }
+  .card-hint a:hover { text-decoration: underline; }
+
+  textarea {
+    width: 100%; height: 210px; background: var(--white); border: none; outline: none;
+    resize: vertical; padding: 16px 18px; font-family: var(--mono);
+    font-size: 11px; color: var(--ink); line-height: 1.75;
+  }
+  textarea::placeholder { color: var(--ink4); }
+
+  .run-row { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
+
+  .run-btn {
+    padding: 11px 32px; background: var(--ink); color: var(--white);
+    border: none; border-radius: 999px; font-family: var(--sans);
+    font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 0.01em;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .run-btn:hover { background: var(--orange); }
+  .run-btn:active { transform: scale(0.98); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .run-status { font-family: var(--mono); font-size: 11px; color: var(--ink3); }
+  .run-status.ok  { color: var(--green); }
+  .run-status.err { color: var(--red); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 22px; box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .stat-card.pass::before  { background: var(--green); }
+  .stat-card.warn::before  { background: var(--amber); }
+  .stat-card.bug::before   { background: var(--red); }
+  .stat-card.total::before { background: var(--ink4); }
+
+  .stat-n { font-family: var(--serif); font-size: 40px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .stat-card.pass  .stat-n { color: var(--green); }
+  .stat-card.warn  .stat-n { color: var(--amber); }
+  .stat-card.bug   .stat-n { color: var(--red); }
+  .stat-card.total .stat-n { color: var(--ink); }
+  .stat-label { font-size: 11px; color: var(--ink3); letter-spacing: 0.02em; }
+
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-size: 11px; color: var(--ink3); margin-right: 4px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .filter-btn {
+    padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--white); color: var(--ink2); font-family: var(--sans);
+    font-size: 12px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow);
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--ink); }
+  .filter-btn.active { background: var(--ink); color: var(--white); border-color: var(--ink); box-shadow: none; }
+
+  .event-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .event-row {
+    display: grid; grid-template-columns: 60px 1fr; gap: 14px; align-items: start;
+    padding: 12px 16px; background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color 0.12s;
+  }
+  .event-row:hover { border-color: var(--border2); }
+
+  .ev-badge {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    padding: 3px 0; border-radius: 4px; text-align: center; letter-spacing: 0.04em;
+  }
+  .ev-badge.pass { background: var(--green-light); color: var(--green); }
+  .ev-badge.warn { background: var(--amber-light); color: var(--amber); }
+  .ev-badge.bug  { background: var(--red-light);   color: var(--red); }
+  .ev-badge.info { background: var(--blue-light);  color: var(--blue); }
+
+  .ev-body { min-width: 0; }
+  .ev-label { font-family: var(--mono); font-size: 12px; color: var(--ink); word-break: break-all; margin-bottom: 3px; font-weight: 500; }
+  .ev-meta  { font-size: 11px; color: var(--ink3); margin-bottom: 2px; }
+  .ev-url   { font-family: var(--mono); font-size: 11px; margin-bottom: 2px; }
+  .ev-url a { color: var(--blue); text-decoration: none; }
+  .ev-url a:hover { text-decoration: underline; }
+  .ev-suggest { font-family: var(--mono); font-size: 11px; color: var(--amber); word-break: break-all; }
+  .ev-suggest::before { content: '→ '; opacity: 0.5; }
+
+  .empty-state { text-align: center; padding: 60px 24px; border: 1.5px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); }
+  .empty-icon  { font-family: var(--serif); font-size: 36px; font-style: italic; color: var(--ink4); margin-bottom: 10px; }
+  .empty-text  { font-size: 13px; color: var(--ink3); }
+
+  #results { display: none; }
+
+  @media (max-width: 768px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    main   { padding: 24px 20px 60px; }
+    header { padding: 0 20px; }
+    .hero  { padding: 36px 20px; }
+    .hero-title { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <span class="logo-name">Ceros <em>QA</em></span>
+    <span class="logo-by">by Reuters Plus</span>
+  </a>
+  <div class="header-pill">Live</div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Campaign tracking validator</div>
+    <h1 class="hero-title">Stop checking<br>Omnibug <em>manually.</em></h1>
+    <p class="hero-desc">Paste a page source, get a full breakdown of every Ceros event — naming, coverage, destination URLs, and bugs — in seconds.</p>
+    <div class="hero-checks">
+      <div class="check-pill"><span class="dot"></span>Naming conventions</div>
+      <div class="check-pill"><span class="dot"></span>Event coverage</div>
+      <div class="check-pill"><span class="dot"></span>Destination URLs</div>
+      <div class="check-pill"><span class="dot"></span>Bug detection</div>
+      <div class="check-pill"><span class="dot"></span>Inline hyperlinks</div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="input-grid">
+    <div class="input-card">
+      <div class="card-top">
+        <span class="card-label">Page source</span>
+        <span class="card-tag required">Required</span>
+      </div>
+      <div class="card-hint">Right-click campaign page → View Page Source → Ctrl+A → Ctrl+C</div>
+      <textarea id="src" placeholder="Paste full page source here…"></textarea>
+    </div>
+    <div class="input-card">
+      <div class="card-top">
+        <span class="card-label">Experience JSON</span>
+        <span class="card-tag optional">Optional — unlocks full analysis</span>
+      </div>
+      <div class="card-hint" id="json-hint">Paste page source first — the JSON URL will appear here</div>
+      <textarea id="json" placeholder="1. Paste page source on the left&#10;2. Click the JSON link above&#10;3. Ctrl+A → Ctrl+C the full page&#10;4. Paste here"></textarea>
+    </div>
+  </div>
+
+  <div class="run-row">
+    <button class="run-btn" id="runBtn" onclick="runQA()">Run QA check</button>
+    <span class="run-status" id="runStatus"></span>
+  </div>
+
+  <div id="results">
+    <div class="stats-grid">
+      <div class="stat-card pass"><div class="stat-n" id="s-pass">0</div><div class="stat-label">Correctly named</div></div>
+      <div class="stat-card warn"><div class="stat-n" id="s-warn">0</div><div class="stat-label">Naming issues</div></div>
+      <div class="stat-card bug"><div class="stat-n" id="s-bug">0</div><div class="stat-label">Bugs found</div></div>
+      <div class="stat-card total"><div class="stat-n" id="s-total">0</div><div class="stat-label">Total events</div></div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Show</span>
+      <button class="filter-btn active" onclick="doFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="doFilter('pass',this)">Correctly named</button>
+      <button class="filter-btn" onclick="doFilter('warn',this)">Naming issues</button>
+      <button class="filter-btn" onclick="doFilter('bug',this)">Bugs</button>
+      <button class="filter-btn" onclick="doFilter('info',this)">Tips</button>
+    </div>
+
+    <div class="event-list" id="list"></div>
+  </div>
+</main>
+
+<script>
+const RULES = [
+  { type:'logo',          rx:/^[A-Za-z0-9]+(_[A-Za-z]+)?Logo_Click$/,                         eg:'EY_Logo_Click' },
+  { type:'video',         rx:/^[A-Za-z0-9]+_.+\s?Video$/,                                      eg:'EY_AI Summit 2025 Video' },
+  { type:'quartile',      rx:/^[A-Za-z0-9]+_[A-Za-z0-9]+_Video (Start|25|50|75|100)$/,         eg:'EY_AISummit2025_Video 25' },
+  { type:'article',       rx:/^[A-Za-z0-9]+(_[A-Za-z0-9]+)?_[A-Za-z0-9]+Article\d*_Click$/,   eg:'EY_AISummit_TenStepsArticle1_Click' },
+  { type:'CTA',           rx:/^[A-Za-z0-9]+_CTA_[A-Za-z0-9]+_Click$/,                         eg:'EY_CTA_LearnMore_Click' },
+  { type:'link',          rx:/^[A-Za-z0-9]+_Link_[A-Za-z0-9.%]+_Click$/,                       eg:'Google_Link_FindOutMore_Click' },
+  { type:'scroll',        rx:/^[A-Za-z0-9]+_Scroll (25|50|75|100)$/,                            eg:'EY_Scroll 25' },
+  { type:'social share',  rx:/^[A-Za-z0-9]+_Social_(LinkedIn|Facebook|Twitter|Instagram|Email|Link)_Share_Click$/, eg:'EY_Social_LinkedIn_Share_Click' },
+  { type:'social profile',rx:/^[A-Za-z0-9]+_Social_(LinkedIn|Facebook|Twitter|Instagram)_Profile_Click$/, eg:'EY_Social_LinkedIn_Profile_Click' },
+  { type:'carousel',      rx:/^[A-Za-z0-9]+_Carousel_Clicks$/,                                 eg:'EY_Carousel_Clicks' },
+  { type:'navigation',    rx:/^[A-Za-z0-9]+_Navigation_.+_Clicks$/,                            eg:'EY_Navigation_BackToHub_Clicks' },
+];
+
+function validate(label) {
+  for (const r of RULES) { if (r.rx.test(label)) return { ok:true, type:r.type }; }
+  return { ok:false, ...guessType(label) };
+}
+
+function guessType(l) {
+  const s = l.toLowerCase();
+  if (/logo/.test(s))                                    return { type:'logo',         eg:RULES[0].eg };
+  if (/video (start|25|50|75|100)/.test(s))              return { type:'quartile',     eg:RULES[2].eg };
+  if (/video/.test(s))                                   return { type:'video',        eg:RULES[1].eg };
+  if (/article/.test(s))                                 return { type:'article',      eg:RULES[3].eg };
+  if (/scroll/.test(s))                                  return { type:'scroll',       eg:RULES[6].eg };
+  if (/linkedin|facebook|twitter|social.*share/.test(s)) return { type:'social share', eg:RULES[7].eg };
+  if (/carousel/.test(s))                                return { type:'carousel',     eg:RULES[9].eg };
+  if (/nav|back.*hub|home/.test(s))                      return { type:'navigation',   eg:RULES[10].eg };
+  if (/link|here|http|www\./.test(s))                    return { type:'link',         eg:RULES[5].eg };
+  return { type:'CTA', eg:RULES[4].eg };
+}
+
+function extractBrand(src) {
+  const m = src.match(/"appSlug"\s*:\s*"([^"]+)"/);
+  if (!m) return 'BRAND';
+  const s = m[1];
+  if (/^ey/.test(s))    return 'EY';
+  if (/dbt/.test(s))    return 'DBT';
+  if (/google/.test(s)) return 'Google';
+  return s.split('-')[0].replace(/^\w/, c => c.toUpperCase());
+}
+
+function extractJsonUrl(src) {
+  let m = src.match(/committedJsonUrl[^:]*:\s*["']([^"']+)["']/);
+  if (m) { const u = m[1].replace(/\\\//g,'/'); return u.startsWith('http') ? u : 'http:'+u; }
+  m = src.match(/url\s*:\s*["'](\/\/[^"']*doc-version-json[^"']+)["']/);
+  if (m) return 'http:' + m[1].replace(/\\\//g,'/');
+  return null;
+}
+
+document.getElementById('src').addEventListener('input', function() {
+  const url = extractJsonUrl(this.value);
+  const hint = document.getElementById('json-hint');
+  if (url) {
+    hint.innerHTML = 'JSON URL: <a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a> — open, Ctrl+A, Ctrl+C, paste right';
+  } else {
+    hint.textContent = 'Paste page source first — the JSON URL will appear here';
+  }
+});
+
+function processJson(raw, brand) {
+  const events=[], bugs=[];
+  const start=raw.indexOf('{'), end=raw.lastIndexOf('}');
+  if (start===-1||end<=start) return {events,bugs,error:'No JSON object found.'};
+  let data;
+  try { data=JSON.parse(raw.slice(start,end+1)); }
+  catch(e) { return {events,bugs,error:'JSON parse error: '+e.message}; }
+
+  const seen=new Set();
+  const add=obj=>{
+    const k=(obj.suggestedLabel||obj.label)+'|'+(obj.url||'');
+    if(seen.has(k))return; seen.add(k); events.push(obj);
+  };
+
+  for (const page of Object.values(data.pages||{})) {
+    for (const [,layer] of Object.entries(page.layerDictionary||{})) {
+      const title=(layer.title||'').trim();
+      const visible=layer.visible!==false;
+      for (const ia of (layer.interactions||[])) {
+        if (ia.action==='url'&&ia.url) {
+          const url=ia.url.replace(/\\\//g,'/');
+          if (!visible) { bugs.push({label:title||'Unnamed',url,note:'Hidden layer (visible:false) with URL — likely template remnant. Delete before republishing.'}); continue; }
+          const g=guessType(title);
+          let sug;
+          if (/back.?to.?hub|home.?page/i.test(title))     sug=`${brand}_Navigation_BackToHub_Clicks`;
+          else if (/^cta$/i.test(title))                    sug=`${brand}_CTA_[BannerCopyHere]_Click`;
+          else if (/logo/i.test(title))                     sug=`${brand}_Logo_Click`;
+          else if (/contact.*here|disclaimer/i.test(title)) sug=`${brand}_Link_ContactUsHere_Click`;
+          else {
+            const slug=title.split(/\s+/).slice(0,3).map(w=>w.replace(/[^A-Za-z0-9]/g,'')).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join('');
+            sug=`${brand}_${g.type==='navigation'?'Navigation':'CTA'}_${slug||'Label'}_${g.type==='navigation'?'Clicks':'Click'}`;
+          }
+          add({label:title,suggestedLabel:sug,type:g.type,url,note:'Hotspot',isHotspot:true});
+        }
+        const sm={'share-linkedin':'LinkedIn','share-facebook':'Facebook','share-twitter':'Twitter','share-email':'Email'};
+        if(sm[ia.action]) add({label:`${brand}_Social_${sm[ia.action]}_Share_Click`,type:'social share',url:'',note:'Ceros native share'});
+      }
+      for (const span of (layer.textSpans||[])) {
+        if (span.hyperlink&&span.hyperlink.location) {
+          const url=span.hyperlink.location.replace(/\\\//g,'/');
+          const text=(layer.textContent||'').slice(span.index,span.index+span.length).trim();
+          const slug=text.split(/\s+/).slice(0,4).map(w=>w.replace(/[^A-Za-z0-9]/g,'')).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join('');
+          add({label:text.slice(0,70),suggestedLabel:`${brand}_Link_${slug||'Link'}_Click`,type:'link',url,note:`Inline link in "${title.slice(0,40)}"`,isRaw:true});
+        }
+      }
+    }
+  }
+  ['25','50','75','100'].forEach(p=>add({label:`${brand}_Scroll ${p}`,type:'scroll',url:'',note:'Scroll script present'}));
+  return {events,bugs,error:null};
+}
+
+function parseNoscriptEvents(src, brand) {
+  const events=[], seen=new Set();
+  const ns=(src.match(/<noscript>([\s\S]*?)<\/noscript>/i)||['',''])[1];
+  const add=(label,type,url='',note='')=>{ if(seen.has(label+url))return; seen.add(label+url); events.push({label,type,url,note}); };
+  const texts=[...ns.matchAll(/<p[^>]*class="text-plus-component"[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>m[1].trim()).filter(t=>t.length>1&&t.length<150);
+  for(const t of texts){
+    if(/watch now/i.test(t))          add(`${brand}_CTA_WatchNow_Click`,'CTA','','Watch now CTA');
+    else if(/learn more/i.test(t))    add(`${brand}_CTA_LearnMore_Click`,'CTA','','Learn more CTA');
+    else if(/find out more/i.test(t)) add(`${brand}_CTA_FindOutMore_Click`,'CTA','','Find out more CTA');
+    else if(/show transcript/i.test(t)) add(`${brand}_CTA_ShowTranscript_Click`,'CTA','','Transcript toggle');
+    else if(/^(next|previous)$/i.test(t)) add(`${brand}_Navigation_${t.trim()}_Clicks`,'navigation','','Nav button');
+    else if(/^explore$/i.test(t))     add(`${brand}_CTA_Explore_Click`,'CTA','','Explore CTA');
+  }
+  const allImg=[...[...ns.matchAll(/<img[^>]+src="([^"]+)"/gi)].map(m=>m[1].toLowerCase()),...[...ns.matchAll(/<img[^>]+alt="([^"]+)"/gi)].map(m=>m[1].toLowerCase())];
+  if(allImg.some(s=>/soc-linkedin|linkedin/.test(s)))  add(`${brand}_Social_LinkedIn_Share_Click`,'social share','','LinkedIn icon');
+  if(allImg.some(s=>/soc-facebook|facebook/.test(s)))  add(`${brand}_Social_Facebook_Share_Click`,'social share','','Facebook icon');
+  if(allImg.some(s=>/twitter/.test(s)))                add(`${brand}_Social_Twitter_Share_Click`,'social share','','Twitter icon');
+  if(allImg.some(s=>/noun-mail|mail.*svg/.test(s)))    add(`${brand}_Social_Email_Share_Click`,'social share','','Email icon');
+  if(allImg.some(s=>/noun-link|link.*svg/.test(s)))    add(`${brand}_Social_Link_Share_Click`,'social share','','Copy link icon');
+  if(allImg.some(s=>/home-icon|home_icon/.test(s)))    add(`${brand}_Navigation_BackToHub_Clicks`,'navigation','','Home icon');
+  if(/ceros_scroll|percent_scroll/.test(src)) ['25','50','75','100'].forEach(p=>add(`${brand}_Scroll ${p}`,'scroll','','Scroll script'));
+  return events;
+}
+
+let allResults=[];
+
+function runQA() {
+  const src=document.getElementById('src').value.trim();
+  const jsonStr=document.getElementById('json').value.trim();
+  const statusEl=document.getElementById('runStatus');
+  if(!src){alert('Paste the page source first.');return;}
+  document.getElementById('runBtn').disabled=true;
+  statusEl.className='run-status';
+  statusEl.textContent='Running…';
+  allResults=[];
+  const brand=extractBrand(src);
+
+  if(jsonStr){
+    const{events,bugs,error}=processJson(jsonStr,brand);
+    if(error){
+      allResults.push({status:'bug',label:'JSON parse error',note:error,url:'',type:'error'});
+      statusEl.className='run-status err';
+      statusEl.textContent='JSON parse failed — check pasted content';
+    } else {
+      const seenK=new Set();
+      for(const ev of events){
+        const k=(ev.suggestedLabel||ev.label)+'|'+(ev.url||'');
+        if(seenK.has(k))continue; seenK.add(k);
+        if(ev.isRaw){
+          allResults.push({status:'warn',label:ev.label,note:'Raw Ceros label — rename in Studio',suggest:ev.suggestedLabel,url:ev.url,type:ev.type});
+        } else {
+          const check=ev.suggestedLabel||ev.label;
+          const v=validate(check);
+          allResults.push({status:v.ok?'pass':'warn',label:check,note:`${ev.type}${ev.note?' — '+ev.note:''}`,url:ev.url,type:ev.type,suggest:v.ok?'':`Expected: ${v.eg}`});
+        }
+      }
+      for(const bug of bugs) allResults.push({status:'bug',label:bug.label,note:bug.note,url:bug.url,type:'hotspot'});
+      statusEl.className='run-status ok';
+      statusEl.textContent=`Done — ${brand} · ${events.length} events`;
+    }
+  } else {
+    const pageEvents=parseNoscriptEvents(src,brand);
+    for(const ev of pageEvents){
+      const v=validate(ev.label);
+      allResults.push({status:v.ok?'pass':'warn',label:ev.label,note:ev.note,url:ev.url,type:ev.type,suggest:v.ok?'':`Expected: ${v.eg}`});
+    }
+    allResults.push({status:'info',label:'Paste the experience JSON for full URL & bug analysis',note:'JSON URL shown above the right box — open, Ctrl+A, Ctrl+C, paste, re-run',url:'',type:'tip'});
+    statusEl.className='run-status';
+    statusEl.textContent='Source-only — paste JSON for full results';
+  }
+
+  document.getElementById('s-pass').textContent=allResults.filter(r=>r.status==='pass').length;
+  document.getElementById('s-warn').textContent=allResults.filter(r=>r.status==='warn').length;
+  document.getElementById('s-bug').textContent=allResults.filter(r=>r.status==='bug').length;
+  document.getElementById('s-total').textContent=allResults.length;
+  document.getElementById('results').style.display='block';
+  document.getElementById('runBtn').disabled=false;
+  doFilter('all',document.querySelector('.filter-btn.active'));
+}
+
+function doFilter(f,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered=f==='all'?allResults:allResults.filter(r=>r.status===f);
+  const list=document.getElementById('list');
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">—</div><div class="empty-text">Nothing here.</div></div>';
+    return;
+  }
+  const bmap={pass:'pass',warn:'warn',bug:'bug',info:'info'};
+  const lmap={pass:'Pass',warn:'Fix',bug:'Bug',info:'Tip'};
+  list.innerHTML=filtered.map(r=>{
+    const cls=bmap[r.status]||'info', txt=lmap[r.status]||'Info';
+    return `<div class="event-row">
+      <span class="ev-badge ${cls}">${txt}</span>
+      <div class="ev-body">
+        <div class="ev-label">${esc(r.label)}</div>
+        <div class="ev-meta">${esc(r.type)}${r.note?' — '+esc(r.note):''}</div>
+        ${r.url?`<div class="ev-url"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.url)}</a></div>`:''}
+        ${r.suggest?`<div class="ev-suggest">${esc(r.suggest)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
