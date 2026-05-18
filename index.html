@@ -348,8 +348,23 @@ const RULES = [
 ];
 
 function validate(label) {
+  // Immediately fail obvious placeholders and too-vague labels
+  if (/\[.*\]/.test(label)) return { ok:false, type:'placeholder', eg:'Replace placeholder with actual copy' };
+  if (/^BRAND_/.test(label)) return { ok:false, type:'unknown', eg:'Brand prefix not resolved — check page source' };
+  if (/^[A-Za-z0-9]+_(CTA|Link)_(Here|Click|Button|Link)_Click$/i.test(label)) return { ok:false, type:'link', eg:RULES[5].eg };
   for (const r of RULES) { if (r.rx.test(label)) return { ok:true, type:r.type }; }
   return { ok:false, ...guessType(label) };
+}
+
+// Detect raw Ceros layer titles — multi-word plain text, filenames, or numbers
+function isRawLabel(title) {
+  if (!title) return false;
+  if (/^\d+$/.test(title.trim())) return true;           // just a number: "25", "100"
+  if (/\.(svg|png|jpg|jpeg|gif)$/i.test(title)) return true; // filename
+  if (/\[/.test(title)) return true;                     // placeholder brackets
+  if (!/[_]/.test(title) && title.split(' ').length > 1) return true; // multi-word no underscores
+  if (/^(hotspot|button|group|shape|text|layer)\s*\d*$/i.test(title)) return true; // generic Ceros defaults
+  return false;
 }
 
 function guessType(l) {
@@ -369,10 +384,14 @@ function guessType(l) {
 function extractBrand(src) {
   const m = src.match(/"appSlug"\s*:\s*"([^"]+)"/);
   if (!m) return 'BRAND';
-  const s = m[1];
-  if (/^ey/.test(s))    return 'EY';
-  if (/dbt/.test(s))    return 'DBT';
-  if (/google/.test(s)) return 'Google';
+  const s = m[1].toLowerCase();
+  if (s.includes('google'))  return 'Google';
+  if (s.startsWith('ey'))    return 'EY';
+  if (s.includes('dbt'))     return 'DBT';
+  if (s.includes('kpmg'))    return 'KPMG';
+  if (s.includes('ida'))     return 'IDA';
+  if (s.includes('sap'))     return 'SAP';
+  // fallback: capitalise first segment
   return s.split('-')[0].replace(/^\w/, c => c.toUpperCase());
 }
 
@@ -416,32 +435,54 @@ function processJson(raw, brand) {
         if (ia.action==='url'&&ia.url) {
           const url=ia.url.replace(/\\\//g,'/');
           if (!visible) { bugs.push({label:title||'Unnamed',url,note:'Hidden layer (visible:false) with URL — likely template remnant. Delete before republishing.'}); continue; }
-          const g=guessType(title);
+
+          // Detect if the title is a raw/generic label
+          const raw = isRawLabel(title);
+          const g = guessType(title);
+
+          // Build suggested label from title
           let sug;
           if (/back.?to.?hub|home.?page/i.test(title))     sug=`${brand}_Navigation_BackToHub_Clicks`;
-          else if (/^cta$/i.test(title))                    sug=`${brand}_CTA_[BannerCopyHere]_Click`;
+          else if (/^cta.?back/i.test(title))               sug=`${brand}_CTA_BackToHub_Click`;
+          else if (/^cta$/i.test(title))                    sug=`${brand}_CTA_[BannerCopy]_Click`;
           else if (/logo/i.test(title))                     sug=`${brand}_Logo_Click`;
           else if (/contact.*here|disclaimer/i.test(title)) sug=`${brand}_Link_ContactUsHere_Click`;
+          else if (/^hotspot\s*\d*$/i.test(title))          sug=`${brand}_[Type]_[Label]_Click`;
           else {
-            const slug=title.split(/\s+/).slice(0,3).map(w=>w.replace(/[^A-Za-z0-9]/g,'')).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join('');
-            sug=`${brand}_${g.type==='navigation'?'Navigation':'CTA'}_${slug||'Label'}_${g.type==='navigation'?'Clicks':'Click'}`;
+            const slug=title.split(/\s+/).slice(0,4)
+              .map(w=>w.replace(/[^A-Za-z0-9]/g,''))
+              .filter(Boolean)
+              .map(w=>w[0].toUpperCase()+w.slice(1))
+              .join('');
+            const actionWord = g.type==='navigation' ? 'Clicks' : 'Click';
+            const typeWord   = g.type==='navigation' ? 'Navigation' : g.type==='link' ? 'Link' : 'CTA';
+            sug=`${brand}_${typeWord}_${slug||'Label'}_${actionWord}`;
           }
-          add({label:title,suggestedLabel:sug,type:g.type,url,note:'Hotspot',isHotspot:true});
+
+          add({
+            label: title,
+            suggestedLabel: sug,
+            type: g.type,
+            url,
+            note: 'Hotspot',
+            isHotspot: true,
+            isRaw: raw
+          });
         }
         const sm={'share-linkedin':'LinkedIn','share-facebook':'Facebook','share-twitter':'Twitter','share-email':'Email'};
-        if(sm[ia.action]) add({label:`${brand}_Social_${sm[ia.action]}_Share_Click`,type:'social share',url:'',note:'Ceros native share'});
+        if(sm[ia.action]) add({label:sm[ia.action]+'.svg', rawLabel:sm[ia.action]+'.svg', suggestedLabel:`${brand}_Social_${sm[ia.action]}_Share_Click`,type:'social share',url:'',note:'Ceros native share'});
       }
       for (const span of (layer.textSpans||[])) {
         if (span.hyperlink&&span.hyperlink.location) {
           const url=span.hyperlink.location.replace(/\\\//g,'/');
           const text=(layer.textContent||'').slice(span.index,span.index+span.length).trim();
           const slug=text.split(/\s+/).slice(0,4).map(w=>w.replace(/[^A-Za-z0-9]/g,'')).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join('');
-          add({label:text.slice(0,70),suggestedLabel:`${brand}_Link_${slug||'Link'}_Click`,type:'link',url,note:`Inline link in "${title.slice(0,40)}"`,isRaw:true});
+          add({label:text.slice(0,70),rawLabel:text.slice(0,70),suggestedLabel:`${brand}_Link_${slug||'Link'}_Click`,type:'link',url,note:`Inline link in "${title.slice(0,40)}"`,isRaw:true});
         }
       }
     }
   }
-  ['25','50','75','100'].forEach(p=>add({label:`${brand}_Scroll ${p}`,type:'scroll',url:'',note:'Scroll script present'}));
+  ['25','50','75','100'].forEach(p=>add({label:p, rawLabel:p, suggestedLabel:`${brand}_Scroll ${p}`,type:'scroll',url:'',note:'Scroll script present'}));
   return {events,bugs,error:null};
 }
 
@@ -459,13 +500,13 @@ function parseNoscriptEvents(src, brand) {
     else if(/^explore$/i.test(t))     add(`${brand}_CTA_Explore_Click`,'CTA','','Explore CTA');
   }
   const allImg=[...[...ns.matchAll(/<img[^>]+src="([^"]+)"/gi)].map(m=>m[1].toLowerCase()),...[...ns.matchAll(/<img[^>]+alt="([^"]+)"/gi)].map(m=>m[1].toLowerCase())];
-  if(allImg.some(s=>/soc-linkedin|linkedin/.test(s)))  add(`${brand}_Social_LinkedIn_Share_Click`,'social share','','LinkedIn icon');
-  if(allImg.some(s=>/soc-facebook|facebook/.test(s)))  add(`${brand}_Social_Facebook_Share_Click`,'social share','','Facebook icon');
-  if(allImg.some(s=>/twitter/.test(s)))                add(`${brand}_Social_Twitter_Share_Click`,'social share','','Twitter icon');
-  if(allImg.some(s=>/noun-mail|mail.*svg/.test(s)))    add(`${brand}_Social_Email_Share_Click`,'social share','','Email icon');
-  if(allImg.some(s=>/noun-link|link.*svg/.test(s)))    add(`${brand}_Social_Link_Share_Click`,'social share','','Copy link icon');
+  if(allImg.some(s=>/soc-linkedin|linkedin/.test(s)))  events.push({label:'soc-linkedin.svg',rawLabel:'soc-linkedin.svg',suggestedLabel:`${brand}_Social_LinkedIn_Share_Click`,type:'social share',url:'',note:'LinkedIn icon'});
+  if(allImg.some(s=>/soc-facebook|facebook/.test(s)))  events.push({label:'soc-facebook.svg',rawLabel:'soc-facebook.svg',suggestedLabel:`${brand}_Social_Facebook_Share_Click`,type:'social share',url:'',note:'Facebook icon'});
+  if(allImg.some(s=>/twitter/.test(s)))                events.push({label:'Twitter.svg',rawLabel:'Twitter.svg',suggestedLabel:`${brand}_Social_Twitter_Share_Click`,type:'social share',url:'',note:'Twitter icon'});
+  if(allImg.some(s=>/noun-mail|mail.*svg/.test(s)))    events.push({label:'noun-mail-6198337.svg',rawLabel:'noun-mail-6198337.svg',suggestedLabel:`${brand}_Social_Email_Share_Click`,type:'social share',url:'',note:'Email icon'});
+  if(allImg.some(s=>/noun-link|link.*svg/.test(s)))    events.push({label:'noun-link.svg',rawLabel:'noun-link.svg',suggestedLabel:`${brand}_Social_Link_Share_Click`,type:'social share',url:'',note:'Copy link icon'});
   if(allImg.some(s=>/home-icon|home_icon/.test(s)))    add(`${brand}_Navigation_BackToHub_Clicks`,'navigation','','Home icon');
-  if(/ceros_scroll|percent_scroll/.test(src)) ['25','50','75','100'].forEach(p=>add(`${brand}_Scroll ${p}`,'scroll','','Scroll script'));
+  if(/ceros_scroll|percent_scroll/.test(src)) ['25','50','75','100'].forEach(p=>events.push({label:p,rawLabel:p,suggestedLabel:`${brand}_Scroll ${p}`,type:'scroll',url:'',note:'Scroll script'}));
   return events;
 }
 
@@ -487,19 +528,28 @@ document.getElementById('xlFile').addEventListener('change', function(e) {
         const ws = wb.Sheets[wb.SheetNames[0]];
         rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       }
-      // Find header row
+      // Find columns — support both single-label and two-label (what it is / what it should be) formats
       const headers = rows[0].map(h => String(h).toLowerCase().trim());
-      const labelIdx = headers.findIndex(h => h.includes('event label') || h === 'label');
-      const typeIdx  = headers.findIndex(h => h.includes('event type') || h === 'type');
-      const urlIdx   = headers.findIndex(h => h.includes('url') || h.includes('destination'));
+      // "what it is" = raw Ceros label currently firing
+      const rawIdx      = headers.findIndex(h => h.includes('what it is') || (h.includes('event label') && !h.includes('should')));
+      // "what it should be" = correct convention label
+      const correctIdx  = headers.findIndex(h => h.includes('what it should be') || h.includes('should be'));
+      // fallback: if no two-column structure, use first event label column for both
+      const labelIdx    = rawIdx !== -1 ? rawIdx : headers.findIndex(h => h.includes('event label') || h === 'label');
+      const typeIdx     = headers.findIndex(h => h.includes('event type') || h === 'type');
+      const urlIdx      = headers.findIndex(h => h.includes('url') || h.includes('destination'));
+
       if (labelIdx === -1) { alert('Could not find "Event Label" column. Check the checklist format.'); return; }
-      checklist = rows.slice(1)
+
+      checklist = rows.slice(2) // skip header + instruction row
         .map(r => ({
-          label: String(r[labelIdx]||'').trim(),
-          type:  String(r[typeIdx]  !== undefined ? r[typeIdx]  : '').trim(),
-          url:   String(r[urlIdx]   !== undefined ? r[urlIdx]   : '').trim(),
+          rawLabel:     String(r[labelIdx]     || '').trim(),
+          correctLabel: correctIdx !== -1 ? String(r[correctIdx] || '').trim() : '',
+          type:         typeIdx  !== -1 ? String(r[typeIdx]  || '').trim() : '',
+          url:          urlIdx   !== -1 ? String(r[urlIdx]   || '').trim() : '',
         }))
-        .filter(r => r.label && !r.label.toLowerCase().includes('event label'));
+        .filter(r => r.rawLabel && !r.rawLabel.toLowerCase().startsWith('per brooke') && !r.rawLabel.toLowerCase().includes('event label'));
+
       const zone = document.getElementById('uploadZone');
       zone.classList.add('has-file');
       document.getElementById('uploadText').textContent = `✓ ${file.name}`;
@@ -513,8 +563,29 @@ document.getElementById('xlFile').addEventListener('change', function(e) {
 });
 
 function fuzzyMatch(a, b) {
-  const norm = s => s.toLowerCase().replace(/[_\s\-]/g,'');
+  if (!a || !b) return false;
+  const norm = s => s.toLowerCase().replace(/[_\s\-\.\/]/g,'');
   return norm(a) === norm(b);
+}
+
+function normaliseUrl(u) {
+  return (u||'').trim().toLowerCase().split('?')[0].split('#')[0].replace(/\/+$/,'');
+}
+
+function detectSocialPlatform(label) {
+  const l = label.toLowerCase();
+  if (/twitter|twitter\/x|twitter_x|\.svg.*twitter/i.test(l) || l === 'twitter.svg') return 'Twitter';
+  if (/linkedin|soc-linkedin/i.test(l) || l === 'linkedin.svg') return 'LinkedIn';
+  if (/facebook|soc-facebook/i.test(l) || l === 'facebook.svg') return 'Facebook';
+  if (/noun-mail|email|mail/i.test(l) || l === 'noun-mail-6198337.svg') return 'Email';
+  if (/noun-link|copy.*link/i.test(l)) return 'Link';
+  return null;
+}
+
+// Check if a label starts with a word followed by underscore (raw Ceros layer title pattern)
+function isRawCerosLabel(label) {
+  // Raw labels: multi-word plain text with no convention structure, or truncated layer titles
+  return !/_/.test(label) || /^\w+\s/.test(label);
 }
 
 function runQA() {
@@ -554,58 +625,103 @@ function runQA() {
     statusEl.textContent='Source-only — paste JSON for full results';
   }
 
-  // ── Step 2: validate naming for found events ─────────────────────────
-  const seenK=new Set();
-  for(const ev of foundEvents){
-    const k=(ev.suggestedLabel||ev.label)+'|'+(ev.url||'');
-    if(seenK.has(k))continue; seenK.add(k);
-    if(ev.isRaw){
-      allResults.push({status:'warn',label:ev.label,note:'Raw Ceros label — rename in Studio',suggest:ev.suggestedLabel,url:ev.url,type:ev.type});
-    } else {
-      const check=ev.suggestedLabel||ev.label;
-      const v=validate(check);
-      allResults.push({status:v.ok?'pass':'warn',label:check,note:`${ev.type}${ev.note?' — '+ev.note:''}`,url:ev.url,type:ev.type,suggest:v.ok?'':`Expected: ${v.eg}`});
-    }
-  }
-
-  // ── Step 3: checklist cross-reference ────────────────────────────────
+  // ── Step 2 & 3: checklist-first logic ────────────────────────────────
   if(checklist.length > 0){
-    const matchedChecklist = new Set();
+    // When a checklist is present, it is the ONLY source of truth.
+    // No naming convention rules are applied. We simply ask:
+    //   a) Is this event on the page? (URL match first, then label)
+    //   b) Does what's firing match the correct label in the checklist exactly?
+    //   c) Does the URL match?
 
-    // Flag checklist items missing from the page
+    const matchedEventKeys = new Set(); // track which foundEvents have been claimed
+
     for(const item of checklist){
-      const foundOnPage = foundEvents.some(ev =>
-        fuzzyMatch(ev.suggestedLabel||ev.label, item.label) ||
-        fuzzyMatch(ev.label, item.label)
-      );
-      if(!foundOnPage){
+      const itemUrl = normaliseUrl(item.url||'');
+
+      // Match strategy: URL first, then label, then smart type matching for scroll/social
+      const foundEv = foundEvents.find(ev => {
+        const evUrl = normaliseUrl(ev.url||'');
+        if(itemUrl && evUrl && itemUrl === evUrl) return true;
+        if(item.rawLabel && fuzzyMatch(ev.label, item.rawLabel)) return true;
+        if(item.correctLabel && fuzzyMatch(ev.label, item.correctLabel)) return true;
+
+        // Smart scroll matching — raw label is just "25", "50", "75", "100"
+        // OR correct label contains a scroll percentage
+        const checkLabel = item.rawLabel || item.correctLabel || '';
+        const scrollPct = checkLabel.match(/^(25|50|75|100)$/) ||
+                          checkLabel.match(/scroll[_\s](25|50|75|100)/i);
+        const pct = scrollPct ? (scrollPct[1]||scrollPct[0]) : null;
+        if(pct && ev.type==='scroll' && ev.label.includes(pct)) return true;
+
+        // Smart social matching — raw label is a filename or platform name
+        const socialPlatform = detectSocialPlatform(item.rawLabel||'') ||
+                               detectSocialPlatform(item.correctLabel||'');
+        if(socialPlatform && ev.type==='social share' &&
+           ev.label.toLowerCase().includes(socialPlatform.toLowerCase())) return true;
+
+        return false;
+      });
+
+      if(!foundEv){
         allResults.push({
-          status:'miss',
-          label: item.label,
-          note: `In checklist but not found on page — may be missing from Ceros`,
-          url: item.url || '',
-          type: item.type || 'unknown',
+          status: 'miss',
+          label:  item.correctLabel || item.rawLabel,
+          note:   'In checklist but not found on page',
+          url:    item.url || '',
+          type:   item.type || '',
           suggest: ''
         });
       } else {
-        matchedChecklist.add(item.label);
-        // URL validation: if checklist has a URL and the found event also has one, compare them
-        const foundEv = foundEvents.find(ev =>
-          fuzzyMatch(ev.suggestedLabel||ev.label, item.label) ||
-          fuzzyMatch(ev.label, item.label)
-        );
-        if(item.url && foundEv && foundEv.url && item.url !== foundEv.url){
-          // Find and update the existing result to flag URL mismatch
-          const existing = allResults.find(r => r.label === (foundEv.suggestedLabel||foundEv.label));
-          if(existing){
-            existing.urlMismatch = true;
-            existing.expectedUrl = item.url;
-            existing.note += ` ⚠ URL mismatch: checklist says ${item.url}`;
-            if(existing.status === 'pass') existing.status = 'warn';
-          }
-        }
+        const evKey = foundEv.label + '|' + (foundEv.url||'');
+        matchedEventKeys.add(evKey);
+
+        const correctLabel = item.correctLabel || item.rawLabel;
+        const firesAs  = foundEv.rawLabel || foundEv.label;
+        const labelCorrect = fuzzyMatch(firesAs, correctLabel);
+        const urlCorrect   = !item.url || !foundEv.url || normaliseUrl(item.url) === normaliseUrl(foundEv.url);
+
+        const status = (labelCorrect && urlCorrect) ? 'pass' : 'warn';
+
+        let notes = [];
+        if(!labelCorrect) notes.push(`Currently fires as: "${firesAs}" — rename in Ceros Studio`);
+        if(!urlCorrect)   notes.push(`URL mismatch — expected: ${item.url}`);
+
+        allResults.push({
+          status,
+          label:   correctLabel,
+          note:    notes.length ? notes.join(' | ') : item.type || foundEv.type || '',
+          url:     item.url || foundEv.url || '',
+          type:    item.type || foundEv.type || '',
+          suggest: !labelCorrect ? `→ Rename to: ${correctLabel}` : '',
+        });
       }
     }
+
+    // Also surface bugs (hidden layers) — these aren't in the checklist
+    // foundEvents already excluded bugs so bugs come through allResults from step 1
+
+  } else {
+    // ── No checklist: fall back to naming convention validation ──────────
+    const seenK=new Set();
+    for(const ev of foundEvents){
+      const k=(ev.suggestedLabel||ev.label)+'|'+(ev.url||'');
+      if(seenK.has(k))continue; seenK.add(k);
+      if(ev.isRaw){
+        allResults.push({
+          status:'warn',
+          label: ev.label,
+          note: ev.isHotspot ? 'Raw Ceros layer title — rename in Ceros Studio' : 'Raw Ceros label — rename in Ceros Studio',
+          suggest: ev.suggestedLabel,
+          url: ev.url,
+          type: ev.type
+        });
+      } else {
+        const check=ev.suggestedLabel||ev.label;
+        const v=validate(check);
+        allResults.push({status:v.ok?'pass':'warn',label:check,note:`${ev.type}${ev.note?' — '+ev.note:''}`,url:ev.url,type:ev.type,suggest:v.ok?'':`Expected: ${v.eg}`});
+      }
+    }
+    allResults.push({status:'info',label:'Upload a checklist for definitive pass/fail results',note:'Without a checklist, results are based on naming convention rules only',url:'',type:'tip'});
   }
 
   renderStats();
