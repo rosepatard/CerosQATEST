@@ -8,241 +8,130 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #faf9f7;
-    --white: #ffffff;
-    --ink: #1a1a18;
-    --ink2: #4a4a47;
-    --ink3: #9a9a96;
-    --ink4: #d0cfc9;
-    --orange: #e8470a;
-    --orange-light: #fff1ec;
-    --green: #1a7a4a;
-    --green-light: #edf7f2;
-    --amber: #92600a;
-    --amber-light: #fef8ec;
-    --red: #b91c1c;
-    --red-light: #fef2f2;
-    --blue: #1d4ed8;
-    --blue-light: #eff6ff;
-    --border: #e8e7e2;
-    --border2: #d0cfc9;
-    --radius: 8px;
-    --radius-lg: 14px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-    --mono: 'DM Mono', monospace;
-    --serif: 'Instrument Serif', serif;
-    --sans: 'DM Sans', sans-serif;
+    --bg:#f5f4f1; --white:#fff; --ink:#181816; --ink2:#484845; --ink3:#989894; --ink4:#d4d3ce;
+    --orange:#e8470a; --orange-light:#fff1ec;
+    --green:#166534; --green-light:#f0fdf4;
+    --amber:#854d0e; --amber-light:#fffbeb;
+    --red:#991b1b; --red-light:#fff5f5;
+    --blue:#1e40af; --blue-light:#eff6ff;
+    --border:#e4e3de; --border2:#cccbc6;
+    --mono:'DM Mono',monospace; --serif:'Instrument Serif',serif; --sans:'DM Sans',sans-serif;
+    --shadow:0 1px 2px rgba(0,0,0,0.05);
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Header */
+  header{background:var(--ink);padding:0 40px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:baseline;gap:10px;text-decoration:none}
+  .logo-name{font-family:var(--serif);font-size:18px;color:#fff}
+  .logo-name em{font-style:italic;color:var(--orange)}
+  .logo-by{font-size:11px;color:rgba(255,255,255,0.35);font-weight:300}
+  .header-tag{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;text-transform:uppercase}
 
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+  /* Page */
+  .page{max-width:860px;margin:0 auto;padding:48px 40px 80px}
+  .page-title{font-family:var(--serif);font-size:38px;letter-spacing:-0.02em;line-height:1.1;margin-bottom:6px}
+  .page-title em{font-style:italic;color:var(--orange)}
+  .page-sub{font-size:13px;color:var(--ink3);margin-bottom:40px}
 
-  header {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 0 40px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  /* Steps */
+  .steps{display:flex;flex-direction:column;gap:2px;margin-bottom:28px}
 
-  .logo { display: flex; align-items: baseline; gap: 8px; text-decoration: none; }
-  .logo-name { font-family: var(--serif); font-size: 20px; color: var(--ink); letter-spacing: -0.01em; }
-  .logo-name em { font-style: italic; color: var(--orange); }
-  .logo-by { font-size: 11px; color: var(--ink3); font-weight: 300; }
+  .step{background:var(--white);border:1px solid var(--border);border-radius:0;overflow:hidden;box-shadow:var(--shadow)}
+  .step:first-child{border-radius:12px 12px 0 0}
+  .step:last-child{border-radius:0 0 12px 12px}
+  .step:only-child{border-radius:12px}
 
-  .header-pill {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--orange-light); border: 1px solid #f4c5b0;
-    border-radius: 999px; padding: 4px 12px;
-    font-size: 11px; font-weight: 500; color: var(--orange);
-  }
-  .header-pill::before { content:''; width:6px; height:6px; background:var(--orange); border-radius:50%; }
+  .step-head{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border)}
+  .step-num{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .step-title{font-size:13px;font-weight:600;flex:1}
+  .step-pill{font-family:var(--mono);font-size:10px;padding:2px 9px;border-radius:999px;font-weight:500;white-space:nowrap}
+  .step-pill.waiting{background:var(--bg);color:var(--ink3);border:1px solid var(--border)}
+  .step-pill.done{background:var(--green-light);color:var(--green);border:1px solid #bbf7d0}
+  .step-pill.active{background:var(--orange-light);color:var(--orange);border:1px solid #fcd9c4}
 
-  .hero {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 52px 40px 48px;
-  }
+  .step-hint{padding:9px 18px;background:var(--bg);font-size:12px;color:var(--ink3);border-bottom:1px solid var(--border);line-height:1.5}
+  .step-hint strong{color:var(--ink2);font-weight:500}
+  .step-hint a{color:var(--orange);text-decoration:none;font-weight:500}
+  .step-hint a:hover{text-decoration:underline}
 
-  .hero-inner { max-width: 1040px; margin: 0 auto; }
+  textarea{width:100%;height:150px;background:var(--white);border:none;outline:none;resize:vertical;padding:14px 18px;font-family:var(--mono);font-size:11px;color:var(--ink);line-height:1.75;display:block}
+  textarea::placeholder{color:var(--ink4)}
 
-  .hero-eyebrow {
-    font-family: var(--mono); font-size: 11px; color: var(--orange);
-    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .hero-eyebrow::before { content:''; display:block; width:24px; height:1px; background:var(--orange); }
+  .upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:100px;cursor:pointer;background:var(--white);padding:20px;text-align:center;transition:background 0.15s}
+  .upload-zone:hover{background:var(--bg)}
+  .upload-zone.done{background:var(--green-light)}
+  .upload-icon{font-size:18px;color:var(--ink4)}
+  .upload-zone.done .upload-icon{color:var(--green)}
+  .upload-primary{font-size:13px;font-weight:500;color:var(--ink2)}
+  .upload-zone.done .upload-primary{color:var(--green)}
+  .upload-secondary{font-family:var(--mono);font-size:10px;color:var(--ink3)}
 
-  .hero-title {
-    font-family: var(--serif); font-size: 48px; line-height: 1.1;
-    letter-spacing: -0.02em; margin-bottom: 14px;
-  }
-  .hero-title em { font-style: italic; color: var(--orange); }
+  /* Run */
+  .run-row{display:flex;align-items:center;gap:16px;margin-bottom:40px}
+  .run-btn{padding:12px 36px;background:var(--orange);color:#fff;border:none;border-radius:999px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
+  .run-btn:hover{opacity:0.88}
+  .run-btn:active{transform:scale(0.98)}
+  .run-btn:disabled{opacity:0.35;cursor:not-allowed}
+  .run-status{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .run-status.ok{color:var(--green)}
+  .run-status.err{color:var(--red)}
 
-  .hero-desc { font-size: 15px; color: var(--ink2); font-weight: 300; max-width: 560px; line-height: 1.65; }
+  /* Stats */
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+  .stat{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+  .stat.pass::after{background:var(--green)}
+  .stat.warn::after{background:var(--amber)}
+  .stat.bug::after{background:var(--red)}
+  .stat.miss::after{background:var(--blue)}
+  .stat.total::after{background:var(--ink4)}
+  .stat-n{font-family:var(--serif);font-size:32px;line-height:1;letter-spacing:-0.02em;margin-bottom:2px}
+  .stat.pass .stat-n{color:var(--green)}
+  .stat.warn .stat-n{color:var(--amber)}
+  .stat.bug  .stat-n{color:var(--red)}
+  .stat.miss .stat-n{color:var(--blue)}
+  .stat.total .stat-n{color:var(--ink)}
+  .stat-l{font-size:11px;color:var(--ink3)}
 
-  .hero-checks { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
-  .check-pill {
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 12px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 999px; font-size: 12px; color: var(--ink2);
-  }
-  .check-pill .dot { width:5px; height:5px; border-radius:50%; background:var(--ink3); flex-shrink:0; }
+  /* Filters */
+  .filters{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .filter-label{font-size:11px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-right:4px}
+  .fb{padding:5px 13px;border-radius:999px;border:1px solid var(--border);background:var(--white);color:var(--ink2);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all 0.12s;box-shadow:var(--shadow)}
+  .fb:hover{border-color:var(--border2);color:var(--ink)}
+  .fb.active{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:none}
 
-  main { max-width: 1040px; margin: 0 auto; padding: 40px 40px 80px; }
+  /* Event list */
+  .ev-list{display:flex;flex-direction:column;gap:3px}
+  .ev-row{display:grid;grid-template-columns:68px 1fr;gap:12px;align-items:start;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);transition:border-color 0.1s}
+  .ev-row:hover{border-color:var(--border2)}
+  .ev-badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 0;border-radius:4px;text-align:center;letter-spacing:0.04em}
+  .ev-badge.pass{background:var(--green-light);color:var(--green)}
+  .ev-badge.warn{background:var(--amber-light);color:var(--amber)}
+  .ev-badge.bug{background:var(--red-light);color:var(--red)}
+  .ev-badge.miss{background:var(--blue-light);color:var(--blue)}
+  .ev-badge.info{background:var(--bg);color:var(--ink3);border:1px solid var(--border)}
+  .ev-body{min-width:0}
+  .ev-label{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink);word-break:break-all;margin-bottom:2px}
+  .ev-note{font-size:11px;color:var(--ink3);margin-bottom:2px}
+  .ev-url{font-family:var(--mono);font-size:11px}
+  .ev-url a{color:var(--blue);text-decoration:none}
+  .ev-url a:hover{text-decoration:underline}
+  .ev-suggest{font-family:var(--mono);font-size:11px;color:var(--amber);word-break:break-all}
+  .ev-suggest::before{content:'→ ';opacity:0.5}
+  .ev-section{padding:14px 0 5px;font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;border-top:1px solid var(--border);margin-top:6px}
+  .ev-section:first-child{border-top:none;margin-top:0;padding-top:0}
+  .empty{text-align:center;padding:48px 24px;border:1.5px dashed var(--border);border-radius:12px;background:var(--white)}
+  .empty-t{font-family:var(--serif);font-size:28px;font-style:italic;color:var(--ink4);margin-bottom:8px}
+  .empty-s{font-size:12px;color:var(--ink3)}
 
-  .input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  #results{display:none}
 
-  .upload-zone {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 210px; cursor: pointer; transition: background 0.15s;
-    background: var(--white); border: none; padding: 24px;
-    text-align: center; gap: 10px;
-  }
-  .upload-zone:hover { background: var(--bg); }
-  .upload-zone.has-file { background: var(--green-light); }
-  .upload-icon { font-size: 28px; color: var(--ink4); }
-  .upload-zone.has-file .upload-icon { color: var(--green); }
-  .upload-text { font-size: 12px; color: var(--ink3); line-height: 1.5; }
-  .upload-zone.has-file .upload-text { color: var(--green); font-weight: 500; }
-  .upload-sub { font-size: 11px; color: var(--ink4); font-family: var(--mono); }
-  .upload-zone.has-file .upload-sub { color: var(--green); opacity: 0.7; }
-
-  .input-card {
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
-    transition: box-shadow 0.2s;
-  }
-  .input-card:focus-within { box-shadow: var(--shadow-md); border-color: var(--border2); }
-
-  .card-top {
-    padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  .card-label { font-size: 12px; font-weight: 600; color: var(--ink); }
-
-  .card-tag { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; white-space: nowrap; }
-  .card-tag.required { background: var(--orange-light); color: var(--orange); }
-  .card-tag.optional { background: var(--bg); color: var(--ink3); border: 1px solid var(--border); }
-
-  .card-hint {
-    padding: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--ink3);
-    border-bottom: 1px solid var(--border); min-height: 36px;
-    display: flex; align-items: center; background: var(--bg); word-break: break-all; line-height: 1.5;
-  }
-  .card-hint a { color: var(--blue); text-decoration: none; }
-  .card-hint a:hover { text-decoration: underline; }
-
-  textarea {
-    width: 100%; height: 210px; background: var(--white); border: none; outline: none;
-    resize: vertical; padding: 16px 18px; font-family: var(--mono);
-    font-size: 11px; color: var(--ink); line-height: 1.75;
-  }
-  textarea::placeholder { color: var(--ink4); }
-
-  .run-row { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
-
-  .run-btn {
-    padding: 11px 32px; background: var(--ink); color: var(--white);
-    border: none; border-radius: 999px; font-family: var(--sans);
-    font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 0.01em;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .run-btn:hover { background: var(--orange); }
-  .run-btn:active { transform: scale(0.98); }
-  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .run-status { font-family: var(--mono); font-size: 11px; color: var(--ink3); }
-  .run-status.ok  { color: var(--green); }
-  .run-status.err { color: var(--red); }
-
-  .stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
-
-  .stat-card {
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 22px; box-shadow: var(--shadow);
-    position: relative; overflow: hidden;
-  }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .stat-card.pass::before  { background: var(--green); }
-  .stat-card.warn::before  { background: var(--amber); }
-  .stat-card.bug::before   { background: var(--red); }
-  .stat-card.miss::before  { background: var(--blue); }
-  .stat-card.total::before { background: var(--ink4); }
-
-  .stat-n { font-family: var(--serif); font-size: 40px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 4px; }
-  .stat-card.pass  .stat-n { color: var(--green); }
-  .stat-card.warn  .stat-n { color: var(--amber); }
-  .stat-card.bug   .stat-n { color: var(--red); }
-  .stat-card.miss  .stat-n { color: var(--blue); }
-  .stat-card.total .stat-n { color: var(--ink); }
-  .stat-label { font-size: 11px; color: var(--ink3); letter-spacing: 0.02em; }
-
-  .filter-bar { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .filter-label { font-size: 11px; color: var(--ink3); margin-right: 4px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
-
-  .filter-btn {
-    padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border);
-    background: var(--white); color: var(--ink2); font-family: var(--sans);
-    font-size: 12px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow);
-  }
-  .filter-btn:hover { border-color: var(--border2); color: var(--ink); }
-  .filter-btn.active { background: var(--ink); color: var(--white); border-color: var(--ink); box-shadow: none; }
-
-  .event-list { display: flex; flex-direction: column; gap: 4px; }
-
-  .event-row {
-    display: grid; grid-template-columns: 60px 1fr; gap: 14px; align-items: start;
-    padding: 12px 16px; background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color 0.12s;
-  }
-  .event-row:hover { border-color: var(--border2); }
-
-  .ev-badge {
-    font-family: var(--mono); font-size: 10px; font-weight: 500;
-    padding: 3px 0; border-radius: 4px; text-align: center; letter-spacing: 0.04em;
-  }
-  .ev-badge.pass { background: var(--green-light); color: var(--green); }
-  .ev-badge.warn { background: var(--amber-light); color: var(--amber); }
-  .ev-badge.bug  { background: var(--red-light);   color: var(--red); }
-  .ev-badge.info { background: var(--blue-light);  color: var(--blue); }
-
-  .ev-body { min-width: 0; }
-  .ev-label { font-family: var(--mono); font-size: 12px; color: var(--ink); word-break: break-all; margin-bottom: 3px; font-weight: 500; }
-  .ev-meta  { font-size: 11px; color: var(--ink3); margin-bottom: 2px; }
-  .ev-url   { font-family: var(--mono); font-size: 11px; margin-bottom: 2px; }
-  .ev-url a { color: var(--blue); text-decoration: none; }
-  .ev-url a:hover { text-decoration: underline; }
-  .ev-suggest { font-family: var(--mono); font-size: 11px; color: var(--amber); word-break: break-all; }
-  .ev-suggest::before { content: '→ '; opacity: 0.5; }
-
-  .empty-state { text-align: center; padding: 60px 24px; border: 1.5px dashed var(--border); border-radius: var(--radius-lg); background: var(--white); }
-  .empty-icon  { font-family: var(--serif); font-size: 36px; font-style: italic; color: var(--ink4); margin-bottom: 10px; }
-  .empty-text  { font-size: 13px; color: var(--ink3); }
-
-  #results { display: none; }
-
-  @media (max-width: 768px) {
-    .input-grid { grid-template-columns: 1fr; }
-    .stats-grid { grid-template-columns: repeat(2,1fr); }
-    main   { padding: 24px 20px 60px; }
-    header { padding: 0 20px; }
-    .hero  { padding: 36px 20px; }
-    .hero-title { font-size: 34px; }
+  @media(max-width:680px){
+    .page{padding:24px 20px 60px}
+    header{padding:0 20px}
+    .stats-row{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
@@ -251,57 +140,52 @@
 <header>
   <a class="logo" href="#">
     <span class="logo-name">Ceros <em>QA</em></span>
-    <span class="logo-by">by Reuters Plus</span>
+    <span class="logo-by">Reuters Plus</span>
   </a>
-  <div class="header-pill">Live</div>
+  <span class="header-tag">Campaign Tracking Validator</span>
 </header>
 
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-eyebrow">Campaign tracking validator</div>
-    <h1 class="hero-title">Stop checking<br>Omnibug <em>manually.</em></h1>
-    <p class="hero-desc">Paste a page source, get a full breakdown of every Ceros event — naming, coverage, destination URLs, and bugs — in seconds.</p>
-    <div class="hero-checks">
-      <div class="check-pill"><span class="dot"></span>Naming conventions</div>
-      <div class="check-pill"><span class="dot"></span>Checklist coverage</div>
-      <div class="check-pill"><span class="dot"></span>Destination URLs</div>
-      <div class="check-pill"><span class="dot"></span>Bug detection</div>
-      <div class="check-pill"><span class="dot"></span>Inline hyperlinks</div>
-    </div>
-  </div>
-</div>
+<div class="page">
+  <h1 class="page-title">Three steps.<br><em>Zero guesswork.</em></h1>
+  <p class="page-sub">Validate every Ceros event — naming, coverage, URLs, and bugs — before a campaign goes live.</p>
 
-<main>
-  <div class="input-grid">
-    <div class="input-card">
-      <div class="card-top">
-        <span class="card-label">Page source</span>
-        <span class="card-tag required">Required</span>
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <span class="step-title">Page source</span>
+        <span class="step-pill active" id="st1">Start here</span>
       </div>
-      <div class="card-hint">Right-click campaign page → View Page Source → Ctrl+A → Ctrl+C</div>
+      <div class="step-hint">Open the live campaign page → right-click → <strong>View Page Source</strong> → Ctrl+A → Ctrl+C → paste below. The JSON link for Step 2 appears automatically.</div>
       <textarea id="src" placeholder="Paste full page source here…"></textarea>
     </div>
-    <div class="input-card">
-      <div class="card-top">
-        <span class="card-label">Experience JSON</span>
-        <span class="card-tag optional">Optional — unlocks full analysis</span>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <span class="step-title">Experience JSON</span>
+        <span class="step-pill waiting" id="st2">Paste source first</span>
       </div>
-      <div class="card-hint" id="json-hint">Paste page source first — the JSON URL will appear here</div>
-      <textarea id="json" placeholder="1. Paste page source on the left&#10;2. Click the JSON link above&#10;3. Ctrl+A → Ctrl+C the full page&#10;4. Paste here"></textarea>
+      <div class="step-hint" id="json-hint">Paste the page source above — a direct link to the JSON will appear here.</div>
+      <textarea id="json" placeholder="1. Click the JSON link above&#10;2. Ctrl+A → Ctrl+C the entire page&#10;3. Paste here&#10;&#10;Unlocks: hotspot URLs · inline hyperlink destinations · bug detection"></textarea>
     </div>
-    <div class="input-card">
-      <div class="card-top">
-        <span class="card-label">Checklist</span>
-        <span class="card-tag optional">Optional — flags missing events</span>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <span class="step-title">Campaign checklist</span>
+        <span class="step-pill waiting" id="st3">Not uploaded</span>
       </div>
-      <div class="card-hint">Upload the filled Excel checklist for this campaign</div>
+      <div class="step-hint">Upload the filled Excel checklist for this campaign. Three columns required: <strong>Event Label</strong> · <strong>Event Type</strong> · <strong>Destination URL</strong></div>
       <div class="upload-zone" id="uploadZone" onclick="document.getElementById('xlFile').click()">
         <div class="upload-icon">↑</div>
-        <div class="upload-text" id="uploadText">Click to upload checklist<br><span style="font-weight:300">(.xlsx or .csv)</span></div>
-        <div class="upload-sub" id="uploadSub">Event Label · Event Type · Destination URL</div>
+        <div class="upload-primary" id="uploadText">Upload checklist (.xlsx or .csv)</div>
+        <div class="upload-secondary" id="uploadSub">Event Label · Event Type · Destination URL</div>
       </div>
       <input type="file" id="xlFile" accept=".xlsx,.xls,.csv" style="display:none">
     </div>
+
   </div>
 
   <div class="run-row">
@@ -310,27 +194,24 @@
   </div>
 
   <div id="results">
-    <div class="stats-grid">
-      <div class="stat-card pass"><div class="stat-n" id="s-pass">0</div><div class="stat-label">Correctly named</div></div>
-      <div class="stat-card warn"><div class="stat-n" id="s-warn">0</div><div class="stat-label">Naming issues</div></div>
-      <div class="stat-card bug"><div class="stat-n" id="s-bug">0</div><div class="stat-label">Bugs found</div></div>
-      <div class="stat-card miss"><div class="stat-n" id="s-miss">0</div><div class="stat-label">Missing from page</div></div>
-      <div class="stat-card total"><div class="stat-n" id="s-total">0</div><div class="stat-label">Total events</div></div>
+    <div class="stats-row">
+      <div class="stat pass"><div class="stat-n" id="s-pass">0</div><div class="stat-l">Correctly named</div></div>
+      <div class="stat warn"><div class="stat-n" id="s-warn">0</div><div class="stat-l">Need renaming</div></div>
+      <div class="stat bug"><div class="stat-n" id="s-bug">0</div><div class="stat-l">Bugs found</div></div>
+      <div class="stat miss"><div class="stat-n" id="s-miss">0</div><div class="stat-l">Missing from page</div></div>
+      <div class="stat total"><div class="stat-n" id="s-total">0</div><div class="stat-l">Total events</div></div>
     </div>
-
-    <div class="filter-bar">
+    <div class="filters">
       <span class="filter-label">Show</span>
-      <button class="filter-btn active" onclick="doFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="doFilter('pass',this)">Correctly named</button>
-      <button class="filter-btn" onclick="doFilter('warn',this)">Naming issues</button>
-      <button class="filter-btn" onclick="doFilter('bug',this)">Bugs</button>
-      <button class="filter-btn" onclick="doFilter('miss',this)">Missing</button>
-      <button class="filter-btn" onclick="doFilter('info',this)">Tips</button>
+      <button class="fb active" onclick="doFilter('all',this)">All</button>
+      <button class="fb" onclick="doFilter('pass',this)">✓ Correct</button>
+      <button class="fb" onclick="doFilter('warn',this)">⚠ Fix</button>
+      <button class="fb" onclick="doFilter('bug',this)">✕ Bugs</button>
+      <button class="fb" onclick="doFilter('miss',this)">Missing</button>
     </div>
-
-    <div class="event-list" id="list"></div>
+    <div class="ev-list" id="list"></div>
   </div>
-</main>
+</div>
 
 <script>
 const RULES = [
@@ -402,16 +283,6 @@ function extractJsonUrl(src) {
   if (m) return 'http:' + m[1].replace(/\\\//g,'/');
   return null;
 }
-
-document.getElementById('src').addEventListener('input', function() {
-  const url = extractJsonUrl(this.value);
-  const hint = document.getElementById('json-hint');
-  if (url) {
-    hint.innerHTML = 'JSON URL: <a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a> — open, Ctrl+A, Ctrl+C, paste right';
-  } else {
-    hint.textContent = 'Paste page source first — the JSON URL will appear here';
-  }
-});
 
 function processJson(raw, brand) {
   const events=[], bugs=[];
@@ -513,54 +384,79 @@ function parseNoscriptEvents(src, brand) {
 let allResults=[];
 let checklist=[];
 
-// ── Checklist upload ──────────────────────────────────────────────────────
-document.getElementById('xlFile').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      let rows = [];
-      if (file.name.endsWith('.csv')) {
-        rows = ev.target.result.split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
-      } else {
-        const wb = XLSX.read(ev.target.result, {type:'binary'});
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      }
-      // Find columns — support both single-label and two-label (what it is / what it should be) formats
-      const headers = rows[0].map(h => String(h).toLowerCase().trim());
-      // "what it is" = raw Ceros label currently firing
-      const rawIdx      = headers.findIndex(h => h.includes('what it is') || (h.includes('event label') && !h.includes('should')));
-      // "what it should be" = correct convention label
-      const correctIdx  = headers.findIndex(h => h.includes('what it should be') || h.includes('should be'));
-      // fallback: if no two-column structure, use first event label column for both
-      const labelIdx    = rawIdx !== -1 ? rawIdx : headers.findIndex(h => h.includes('event label') || h === 'label');
-      const typeIdx     = headers.findIndex(h => h.includes('event type') || h === 'type');
-      const urlIdx      = headers.findIndex(h => h.includes('url') || h.includes('destination'));
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-      if (labelIdx === -1) { alert('Could not find "Event Label" column. Check the checklist format.'); return; }
+// ── DOM listeners (wrapped to be safe) ───────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
 
-      checklist = rows.slice(2) // skip header + instruction row
-        .map(r => ({
-          rawLabel:     String(r[labelIdx]     || '').trim(),
-          correctLabel: correctIdx !== -1 ? String(r[correctIdx] || '').trim() : '',
-          type:         typeIdx  !== -1 ? String(r[typeIdx]  || '').trim() : '',
-          url:          urlIdx   !== -1 ? String(r[urlIdx]   || '').trim() : '',
-        }))
-        .filter(r => r.rawLabel && !r.rawLabel.toLowerCase().startsWith('per brooke') && !r.rawLabel.toLowerCase().includes('event label'));
-
-      const zone = document.getElementById('uploadZone');
-      zone.classList.add('has-file');
-      document.getElementById('uploadText').textContent = `✓ ${file.name}`;
-      document.getElementById('uploadSub').textContent  = `${checklist.length} events loaded`;
-    } catch(err) {
-      alert('Could not read file: ' + err.message);
+  document.getElementById('src').addEventListener('input', function() {
+    const url = extractJsonUrl(this.value);
+    const hint = document.getElementById('json-hint');
+    const st1 = document.getElementById('st1');
+    const st2 = document.getElementById('st2');
+    if(!hint || !st1 || !st2) return;
+    if(this.value.trim()){
+      st1.textContent='✓ Done'; st1.className='step-pill done';
+      if(url){ st2.textContent='Link ready below'; st2.className='step-pill active'; }
+      else{ st2.textContent='No JSON found'; st2.className='step-pill waiting'; }
+    } else {
+      st1.textContent='Start here'; st1.className='step-pill active';
+      st2.textContent='Paste source first'; st2.className='step-pill waiting';
     }
-  };
-  if (file.name.endsWith('.csv')) reader.readAsText(file);
-  else reader.readAsBinaryString(file);
-});
+    if(url){
+      hint.innerHTML='JSON URL: <a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a> — open, Ctrl+A, Ctrl+C, paste above.';
+    } else {
+      hint.textContent='Paste the page source above — a direct link to the JSON will appear here.';
+    }
+  });
+
+  document.getElementById('xlFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        let rows = [];
+        if (file.name.endsWith('.csv')) {
+          rows = ev.target.result.split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
+        } else {
+          const wb = XLSX.read(ev.target.result, {type:'binary'});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        }
+        const headers = rows[0].map(h => String(h).toLowerCase().trim());
+        const rawIdx     = headers.findIndex(h => h.includes('what it is') || (h.includes('event label') && !h.includes('should')));
+        const correctIdx = headers.findIndex(h => h.includes('what it should be') || h.includes('should be'));
+        const labelIdx   = rawIdx !== -1 ? rawIdx : headers.findIndex(h => h.includes('event label') || h === 'label');
+        const typeIdx    = headers.findIndex(h => h.includes('event type') || h === 'type');
+        const urlIdx     = headers.findIndex(h => h.includes('url') || h.includes('destination'));
+
+        if (labelIdx === -1) { alert('Could not find "Event Label" column. Check the checklist format.'); return; }
+
+        checklist = rows.slice(2)
+          .map(r => ({
+            rawLabel:     String(r[labelIdx]     || '').trim(),
+            correctLabel: correctIdx !== -1 ? String(r[correctIdx] || '').trim() : '',
+            type:         typeIdx  !== -1 ? String(r[typeIdx]  || '').trim() : '',
+            url:          urlIdx   !== -1 ? String(r[urlIdx]   || '').trim() : '',
+          }))
+          .filter(r => r.rawLabel && !r.rawLabel.toLowerCase().startsWith('per brooke') && !r.rawLabel.toLowerCase().includes('event label'));
+
+        const zone = document.getElementById('uploadZone');
+        if(zone) zone.classList.add('done');
+        const ut = document.getElementById('uploadText'); if(ut) ut.textContent = `✓ ${file.name}`;
+        const us = document.getElementById('uploadSub');  if(us) us.textContent = `${checklist.length} events loaded`;
+        const st3 = document.getElementById('st3');
+        if(st3){ st3.textContent = `✓ ${checklist.length} events`; st3.className = 'step-pill done'; }
+      } catch(err) {
+        alert('Could not read file: ' + err.message);
+      }
+    };
+    if (file.name.endsWith('.csv')) reader.readAsText(file);
+    else reader.readAsBinaryString(file);
+  });
+
+}); // end DOMContentLoaded
 
 function fuzzyMatch(a, b) {
   if (!a || !b) return false;
@@ -610,7 +506,7 @@ function runQA() {
       statusEl.className='run-status err';
       statusEl.textContent='JSON parse failed — check pasted content';
       document.getElementById('runBtn').disabled=false;
-      renderStats(); doFilter('all',document.querySelector('.filter-btn.active'));
+      renderStats(); doFilter('all',document.querySelector('.fb.active'));
       return;
     }
     foundEvents = events;
@@ -625,7 +521,126 @@ function runQA() {
     statusEl.textContent='Source-only — paste JSON for full results';
   }
 
-  // ── Step 2 & 3: checklist-first logic ────────────────────────────────
+  // ── Step 2: detect video presence ────────────────────────────────────
+  // Signal 1: JSON has a layer title ending in "Video"
+  let videoTitles = [];
+  if(jsonStr){
+    try {
+      const start = jsonStr.indexOf('{'), end = jsonStr.lastIndexOf('}');
+      const data = JSON.parse(jsonStr.slice(start, end+1));
+      for(const page of Object.values(data.pages||{})){
+        for(const [,layer] of Object.entries(page.layerDictionary||{})){
+          if(layer.title && /\bVideo$/i.test(layer.title.trim())){
+            videoTitles.push(layer.title.trim());
+          }
+        }
+      }
+    } catch(e){}
+  }
+  // Signal 2: checklist contains video or video quartile items
+  const checklistHasVideo = checklist.some(item =>
+    /video/i.test(item.correctLabel||item.rawLabel||'') ||
+    /^video/i.test(item.type||'')
+  );
+  const hasVideo = videoTitles.length > 0 || checklistHasVideo;
+
+  // ── Step 3: mandatory event checks ───────────────────────────────────
+  // These must be present and correctly named on EVERY custom content page.
+  // Checked independently of the checklist.
+  const mandatorySection = [];
+
+  // 3a. Scroll depth — 25/50/75/100
+  const scrollEvents = foundEvents.filter(ev => ev.type === 'scroll');
+  if(scrollEvents.length === 0){
+    mandatorySection.push({
+      status:'bug', label:'Scroll tracking missing',
+      note:'No scroll depth events detected — scroll script may not be implemented',
+      url:'', type:'scroll', suggest:''
+    });
+  } else {
+    for(const ev of scrollEvents){
+      const correctLabel = ev.suggestedLabel || ev.label;
+      const v = validate(correctLabel);
+      mandatorySection.push({
+        status: v.ok ? 'pass' : 'warn',
+        label: correctLabel,
+        note: `scroll — mandatory`,
+        url: '', type: 'scroll',
+        suggest: v.ok ? '' : `Expected: ${v.eg}`
+      });
+    }
+  }
+
+  // 3b. Social shares — all four should be present
+  const socialTypes = ['LinkedIn','Facebook','Twitter','Email'];
+  for(const platform of socialTypes){
+    const found = foundEvents.find(ev =>
+      ev.type==='social share' && ev.label.toLowerCase().includes(platform.toLowerCase())
+    );
+    if(!found){
+      mandatorySection.push({
+        status:'bug', label:`${platform} share missing`,
+        note:`${platform} share event not detected on page`,
+        url:'', type:'social share', suggest:`${brand}_Social_${platform}_Share_Click`
+      });
+    } else {
+      const correctLabel = found.suggestedLabel || found.label;
+      const v = validate(correctLabel);
+      mandatorySection.push({
+        status: v.ok ? 'pass' : 'warn',
+        label: correctLabel,
+        note: `social share — mandatory`,
+        url: '', type: 'social share',
+        suggest: v.ok ? '' : `Expected: ${v.eg}`
+      });
+    }
+  }
+
+  // 3c. Video quartiles — only if video detected
+  if(hasVideo){
+    const quartilePcts = ['Start','25','50','75','100'];
+    for(const videoTitle of videoTitles.length > 0 ? videoTitles : ['[Video]']){
+      // Derive short name from video title for the quartile label
+      const slug = videoTitle.replace(/\s*Video$/i,'').trim()
+        .split(/\s+/).slice(0,3)
+        .map(w=>w.replace(/[^A-Za-z0-9]/g,''))
+        .filter(Boolean).join('');
+      for(const pct of quartilePcts){
+        const expectedLabel = `${brand}_${slug}_Video ${pct}`;
+        const found = foundEvents.find(ev =>
+          ev.type==='quartile' &&
+          ev.label.includes(pct) &&
+          ev.label.toLowerCase().includes(slug.toLowerCase())
+        );
+        if(!found){
+          mandatorySection.push({
+            status:'warn', label:expectedLabel,
+            note:`video quartile — not found on page (video detected: "${videoTitle}")`,
+            url:'', type:'video quartile',
+            suggest:`Add to Ceros: ${expectedLabel}`
+          });
+        } else {
+          const v = validate(found.suggestedLabel||found.label);
+          mandatorySection.push({
+            status: v.ok ? 'pass' : 'warn',
+            label: found.suggestedLabel||found.label,
+            note: `video quartile — mandatory`,
+            url: '', type: 'video quartile',
+            suggest: v.ok ? '' : `Expected: ${v.eg}`
+          });
+        }
+      }
+    }
+  }
+
+  // Add a visual separator for mandatory section
+  if(mandatorySection.length > 0){
+    allResults.push({status:'info', label:'── Mandatory events ──', note:'Scroll, social shares and video quartiles are required on every campaign', url:'', type:'section'});
+    allResults.push(...mandatorySection);
+    allResults.push({status:'info', label:'── Campaign-specific events ──', note:'From checklist or naming convention check', url:'', type:'section'});
+  }
+
+
   if(checklist.length > 0){
     // When a checklist is present, it is the ONLY source of truth.
     // No naming convention rules are applied. We simply ask:
@@ -727,43 +742,44 @@ function runQA() {
   renderStats();
   document.getElementById('results').style.display='block';
   document.getElementById('runBtn').disabled=false;
-  doFilter('all',document.querySelector('.filter-btn.active'));
+  doFilter('all',document.querySelector('.fb.active'));
 }
 
 function renderStats(){
-  document.getElementById('s-pass').textContent=allResults.filter(r=>r.status==='pass').length;
-  document.getElementById('s-warn').textContent=allResults.filter(r=>r.status==='warn').length;
-  document.getElementById('s-bug').textContent=allResults.filter(r=>r.status==='bug').length;
-  document.getElementById('s-miss').textContent=allResults.filter(r=>r.status==='miss').length;
-  document.getElementById('s-total').textContent=allResults.length;
+  const real = allResults.filter(r=>r.type!=='section');
+  document.getElementById('s-pass').textContent=real.filter(r=>r.status==='pass').length;
+  document.getElementById('s-warn').textContent=real.filter(r=>r.status==='warn').length;
+  document.getElementById('s-bug').textContent=real.filter(r=>r.status==='bug').length;
+  document.getElementById('s-miss').textContent=real.filter(r=>r.status==='miss').length;
+  document.getElementById('s-total').textContent=real.length;
 }
 
 function doFilter(f,btn){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const filtered=f==='all'?allResults:allResults.filter(r=>r.status===f);
+  const filtered=f==='all'?allResults:allResults.filter(r=>r.status===f||r.type==='section');
+  const realFiltered=filtered.filter(r=>r.type!=='section');
   const list=document.getElementById('list');
-  if(!filtered.length){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">—</div><div class="empty-text">Nothing here.</div></div>';
+  if(!realFiltered.length){
+    list.innerHTML='<div class="empty"><div class="empty-t">All clear</div><div class="empty-s">Nothing in this category.</div></div>';
     return;
   }
-  const bmap={pass:'pass',warn:'warn',bug:'bug',miss:'info',info:'info'};
+  const bmap={pass:'pass',warn:'warn',bug:'bug',miss:'miss',info:'info'};
   const lmap={pass:'Pass',warn:'Fix',bug:'Bug',miss:'Missing',info:'Tip'};
   list.innerHTML=filtered.map(r=>{
-    const cls=bmap[r.status]||'info', txt=lmap[r.status]||'Info';
-    return `<div class="event-row">
+    if(r.type==='section') return `<div class="ev-section">${esc(r.label)}</div>`;
+    const cls=bmap[r.status]||'info', txt=lmap[r.status]||r.status;
+    return `<div class="ev-row">
       <span class="ev-badge ${cls}">${txt}</span>
       <div class="ev-body">
         <div class="ev-label">${esc(r.label)}</div>
-        <div class="ev-meta">${esc(r.type)}${r.note?' — '+esc(r.note):''}</div>
+        <div class="ev-note">${esc(r.type)}${r.note?' — '+esc(r.note):''}</div>
         ${r.url?`<div class="ev-url"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.url)}</a></div>`:''}
         ${r.suggest?`<div class="ev-suggest">${esc(r.suggest)}</div>`:''}
       </div>
     </div>`;
   }).join('');
 }
-
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
