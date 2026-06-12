@@ -341,7 +341,13 @@ function processJson(raw, brand) {
           });
         }
         const sm={'share-linkedin':'LinkedIn','share-facebook':'Facebook','share-twitter':'Twitter','share-email':'Email'};
-        if(sm[ia.action]) add({label:sm[ia.action]+'.svg', rawLabel:sm[ia.action]+'.svg', suggestedLabel:`${brand}_Social_${sm[ia.action]}_Share_Click`,type:'social share',url:'',note:'Ceros native share'});
+        if(sm[ia.action]){
+          const platform = sm[ia.action];
+          // Use the layer title if it looks like a proper label, otherwise fall back to platform.svg
+          const socialLabel = (!isRawLabel(title) && title) ? title : platform+'.svg';
+          const socialSug   = (!isRawLabel(title) && title) ? title : `${brand}_Social_${platform}_Share_Click`;
+          add({label:socialLabel, rawLabel:socialLabel, suggestedLabel:socialSug, type:'social share', url:'', note:'Ceros native share'});
+        }
       }
       for (const span of (layer.textSpans||[])) {
         if (span.hyperlink&&span.hyperlink.location) {
@@ -421,26 +427,96 @@ document.addEventListener('DOMContentLoaded', function() {
           rows = ev.target.result.split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
         } else {
           const wb = XLSX.read(ev.target.result, {type:'binary'});
+          // Always use the FIRST sheet — that's where the campaign naming convention lives
           const ws = wb.Sheets[wb.SheetNames[0]];
           rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
         }
-        const headers = rows[0].map(h => String(h).toLowerCase().trim());
-        const rawIdx     = headers.findIndex(h => h.includes('what it is') || (h.includes('event label') && !h.includes('should')));
-        const correctIdx = headers.findIndex(h => h.includes('what it should be') || h.includes('should be'));
-        const labelIdx   = rawIdx !== -1 ? rawIdx : headers.findIndex(h => h.includes('event label') || h === 'label');
-        const typeIdx    = headers.findIndex(h => h.includes('event type') || h === 'type');
-        const urlIdx     = headers.findIndex(h => h.includes('url') || h.includes('destination'));
+        // ── Standard template parser ─────────────────────────────────────
+        // The Reuters Plus naming convention checklist uses a consistent template.
+        // Real event labels live in column A. We skip:
+        //   - Section headers (Logo Clicks, Video Name, Scroll Events, etc.)
+        //   - Template placeholders ([Brand Name], [Location], etc.)
+        //   - Example rows (EY_ prefix)
+        //   - "NA" entries (section not applicable for this campaign)
+        //   - Instruction/note rows (* prefix)
+        //   - Blank rows
+        //   - Anything without an underscore (not a real label)
+        // Scroll depth and video quartile rows are handled by the mandatory
+        // section — they do NOT go into the campaign-specific checklist.
 
-        if (labelIdx === -1) { alert('Could not find "Event Label" column. Check the checklist format.'); return; }
+        const SECTION_HEADERS = [
+          'reuters plus page', 'logo clicks', 'video name', 'video quartile',
+          'article tile clicks', 'link/hyperlinked', 'button/cta',
+          'scroll events', 'social share button', 'brand social button',
+          'carousel navigation', 'page navigation', 'event 2 data',
+          'event label', 'event data (video', 'event data',
+          'indicates copy',
+        ];
 
-        checklist = rows.slice(2)
-          .map(r => ({
-            rawLabel:     String(r[labelIdx]     || '').trim(),
-            correctLabel: correctIdx !== -1 ? String(r[correctIdx] || '').trim() : '',
-            type:         typeIdx  !== -1 ? String(r[typeIdx]  || '').trim() : '',
-            url:          urlIdx   !== -1 ? String(r[urlIdx]   || '').trim() : '',
+        function isSkippable(cell) {
+          if (cell === null || cell === undefined || cell === '') return true;
+          const s = String(cell).trim();
+          if (!s || s === 'NA' || s === 'N/A') return true;
+          if (s.startsWith('[') || s.startsWith('*') || s.startsWith('=')) return true;
+          if (/^ey_/i.test(s)) return true; // example rows
+          const sl = s.toLowerCase();
+          if (SECTION_HEADERS.some(h => sl.startsWith(h))) return true;
+          // Must start with a letter and contain at least one underscore to be a real label
+          if (!/^[A-Za-z]/.test(s) || !s.includes('_')) return true;
+          return false;
+        }
+
+        function inferType(s) {
+          const l = s.toLowerCase();
+          if (/_scroll\s*(25|50|75|100)/i.test(l)) return 'scroll';
+          if (/_video\s*(start|25|50|75|100)/i.test(l)) return 'video quartile';
+          if (/video$/i.test(l.trim())) return 'video';
+          if (/_social_.*_share_/i.test(l)) return 'social share';
+          if (/_social_.*_profile_/i.test(l)) return 'social profile';
+          if (/_carousel_/i.test(l)) return 'carousel';
+          if (/_navigation_/i.test(l)) return 'navigation';
+          if (/_cta_/i.test(l)) return 'cta';
+          if (/_link_/i.test(l)) return 'link';
+          if (/_logo_/i.test(l) || /logo_click/i.test(l)) return 'logo';
+          if (/(article|casestudy|report).*_click/i.test(l)) return 'article';
+          if (/_click$/i.test(l)) return 'click';
+          return 'click';
+        }
+
+        // ── Auto-detect which column holds real event labels ─────────────
+        // The template usually puts labels in col B (index 1), but we scan
+        // cols 0–3 and pick the one with the most valid-looking labels.
+
+        function looksLikeLabel(s) {
+          if (!s || typeof s !== 'string') return false;
+          s = s.trim();
+          if (!s || s === 'NA' || s === 'N/A') return false;
+          if (s.startsWith('[') || s.startsWith('*') || s.startsWith('=')) return false;
+          if (/^ey_/i.test(s)) return false;
+          const sl = s.toLowerCase();
+          if (SECTION_HEADERS.some(h => sl.startsWith(h))) return false;
+          return /^[A-Za-z]/.test(s) && s.includes('_');
+        }
+
+        let bestCol = 1; // default col B
+        let bestCount = 0;
+        for (let col = 0; col <= 3; col++) {
+          const count = rows.filter(r => looksLikeLabel(String(r[col] || ''))).length;
+          if (count > bestCount) { bestCount = count; bestCol = col; }
+        }
+
+        // Extract real event labels from the best column, skip scroll/video quartile
+        // (those are checked by the mandatory section, not the campaign checklist)
+        checklist = rows
+          .map(r => String(r[bestCol] || '').trim())
+          .filter(s => looksLikeLabel(s))
+          .map(s => ({
+            rawLabel:     s,
+            correctLabel: s,
+            type:         inferType(s),
+            url:          '',
           }))
-          .filter(r => r.rawLabel && !r.rawLabel.toLowerCase().startsWith('per brooke') && !r.rawLabel.toLowerCase().includes('event label'));
+          .filter(item => item.type !== 'scroll' && item.type !== 'video quartile');
 
         const zone = document.getElementById('uploadZone');
         if(zone) zone.classList.add('done');
@@ -470,7 +546,7 @@ function normaliseUrl(u) {
 
 function detectSocialPlatform(label) {
   const l = label.toLowerCase();
-  if (/twitter|twitter\/x|twitter_x|\.svg.*twitter/i.test(l) || l === 'twitter.svg') return 'Twitter';
+  if (/twitter|twitter\/x|twitter_x|\.svg.*twitter|\bx\b.*share|_x_share/i.test(l) || l === 'twitter.svg') return 'Twitter';
   if (/linkedin|soc-linkedin/i.test(l) || l === 'linkedin.svg') return 'LinkedIn';
   if (/facebook|soc-facebook/i.test(l) || l === 'facebook.svg') return 'Facebook';
   if (/noun-mail|email|mail/i.test(l) || l === 'noun-mail-6198337.svg') return 'Email';
@@ -493,7 +569,13 @@ function runQA() {
   statusEl.className='run-status';
   statusEl.textContent='Running…';
   allResults=[];
-  const brand=extractBrand(src);
+  let brand=extractBrand(src);
+  // If brand not resolved from source, try to derive it from checklist labels
+  if(brand === 'BRAND' && checklist.length > 0){
+    const firstLabel = checklist[0].correctLabel || checklist[0].rawLabel || '';
+    const m = firstLabel.match(/^([A-Za-z][A-Za-z0-9]*)/);
+    if(m) brand = m[1];
+  }
 
   // ── Step 1: gather found events ──────────────────────────────────────
   let foundEvents = [];
@@ -545,11 +627,11 @@ function runQA() {
   const hasVideo = videoTitles.length > 0 || checklistHasVideo;
 
   // ── Step 3: mandatory event checks ───────────────────────────────────
-  // These must be present and correctly named on EVERY custom content page.
-  // Checked independently of the checklist.
+  // Scroll depth, social shares, and video quartiles must be PRESENT on every page.
+  // We only check presence — label format is NOT validated here.
   const mandatorySection = [];
 
-  // 3a. Scroll depth — 25/50/75/100
+  // 3a. Scroll depth — just check that all 4 depths fire
   const scrollEvents = foundEvents.filter(ev => ev.type === 'scroll');
   if(scrollEvents.length === 0){
     mandatorySection.push({
@@ -558,42 +640,33 @@ function runQA() {
       url:'', type:'scroll', suggest:''
     });
   } else {
-    for(const ev of scrollEvents){
-      const correctLabel = ev.suggestedLabel || ev.label;
-      const v = validate(correctLabel);
+    for(const pct of ['25','50','75','100']){
+      const found = scrollEvents.find(ev => ev.label.includes(pct));
       mandatorySection.push({
-        status: v.ok ? 'pass' : 'warn',
-        label: correctLabel,
-        note: `scroll — mandatory`,
-        url: '', type: 'scroll',
-        suggest: v.ok ? '' : `Expected: ${v.eg}`
+        status: found ? 'pass' : 'bug',
+        label: found ? (found.label) : `Scroll ${pct} missing`,
+        note: `scroll depth — mandatory`,
+        url:'', type:'scroll', suggest: found ? '' : `Scroll ${pct} event not detected`
       });
     }
   }
 
-  // 3b. Social shares — all four should be present
+  // 3b. Social shares — check each of the four platforms (Twitter and X are equivalent)
   const socialTypes = ['LinkedIn','Facebook','Twitter','Email'];
   for(const platform of socialTypes){
     const found = foundEvents.find(ev =>
-      ev.type==='social share' && ev.label.toLowerCase().includes(platform.toLowerCase())
+      ev.type==='social share' && (
+        ev.label.toLowerCase().includes(platform.toLowerCase()) ||
+        (platform === 'Twitter' && /\b_x_share\b|social_x_share/i.test(ev.label))
+      )
     );
-    if(!found){
-      mandatorySection.push({
-        status:'bug', label:`${platform} share missing`,
-        note:`${platform} share event not detected on page`,
-        url:'', type:'social share', suggest:`${brand}_Social_${platform}_Share_Click`
-      });
-    } else {
-      const correctLabel = found.suggestedLabel || found.label;
-      const v = validate(correctLabel);
-      mandatorySection.push({
-        status: v.ok ? 'pass' : 'warn',
-        label: correctLabel,
-        note: `social share — mandatory`,
-        url: '', type: 'social share',
-        suggest: v.ok ? '' : `Expected: ${v.eg}`
-      });
-    }
+    mandatorySection.push({
+      status: found ? 'pass' : 'bug',
+      label: found ? found.label : `${platform} share missing`,
+      note: `social share — mandatory`,
+      url:'', type:'social share',
+      suggest: found ? '' : `${platform} share event not detected on page`
+    });
   }
 
   // 3c. Video quartiles — only if video detected
