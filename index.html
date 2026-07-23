@@ -84,14 +84,12 @@
   .stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
   .stat.pass::after{background:var(--green)}
   .stat.warn::after{background:var(--amber)}
-  .stat.bug::after{background:var(--red)}
-  .stat.miss::after{background:var(--blue)}
+  .stat.miss::after{background:var(--red)}
   .stat.total::after{background:var(--ink4)}
   .stat-n{font-family:var(--serif);font-size:32px;line-height:1;letter-spacing:-0.02em;margin-bottom:2px}
   .stat.pass .stat-n{color:var(--green)}
   .stat.warn .stat-n{color:var(--amber)}
-  .stat.bug  .stat-n{color:var(--red)}
-  .stat.miss .stat-n{color:var(--blue)}
+  .stat.miss .stat-n{color:var(--red)}
   .stat.total .stat-n{color:var(--ink)}
   .stat-l{font-size:11px;color:var(--ink3)}
 
@@ -109,8 +107,7 @@
   .ev-badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 0;border-radius:4px;text-align:center;letter-spacing:0.04em}
   .ev-badge.pass{background:var(--green-light);color:var(--green)}
   .ev-badge.warn{background:var(--amber-light);color:var(--amber)}
-  .ev-badge.bug{background:var(--red-light);color:var(--red)}
-  .ev-badge.miss{background:var(--blue-light);color:var(--blue)}
+  .ev-badge.miss{background:var(--red-light);color:var(--red)}
   .ev-badge.info{background:var(--bg);color:var(--ink3);border:1px solid var(--border)}
   .ev-body{min-width:0}
   .ev-label{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink);word-break:break-all;margin-bottom:2px}
@@ -197,8 +194,8 @@
     <div class="stats-row">
       <div class="stat pass"><div class="stat-n" id="s-pass">0</div><div class="stat-l">Correctly named</div></div>
       <div class="stat warn"><div class="stat-n" id="s-warn">0</div><div class="stat-l">Need renaming</div></div>
-      <div class="stat bug"><div class="stat-n" id="s-bug">0</div><div class="stat-l">Bugs found</div></div>
-      <div class="stat miss"><div class="stat-n" id="s-miss">0</div><div class="stat-l">Missing from page</div></div>
+      
+      <div class="stat miss"><div class="stat-n" id="s-miss">0</div><div class="stat-l">Missing</div></div>
       <div class="stat total"><div class="stat-n" id="s-total">0</div><div class="stat-l">Total events</div></div>
     </div>
     <div class="filters">
@@ -206,7 +203,7 @@
       <button class="fb active" onclick="doFilter('all',this)">All</button>
       <button class="fb" onclick="doFilter('pass',this)">✓ Correct</button>
       <button class="fb" onclick="doFilter('warn',this)">⚠ Fix</button>
-      <button class="fb" onclick="doFilter('bug',this)">✕ Bugs</button>
+      <button class="fb" onclick="doFilter('miss',this)">✕ Missing</button>
       <button class="fb" onclick="doFilter('miss',this)">Missing</button>
     </div>
     <div class="ev-list" id="list"></div>
@@ -389,6 +386,7 @@ function parseNoscriptEvents(src, brand) {
 
 let allResults=[];
 let checklist=[];
+let checklistVideoNames=[];
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -507,6 +505,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Extract real event labels from the best column, skip scroll/video quartile
         // (those are checked by the mandatory section, not the campaign checklist)
+        // BUT capture video names separately — they are camelCase with no underscores
+        // so looksLikeLabel() would drop them. We detect them by the Video$ suffix.
+        checklistVideoNames = rows
+          .map(r => String(r[bestCol] || '').trim())
+          .filter(s => {
+            if(!s || s === 'NA' || s === 'N/A') return false;
+            if(s.startsWith('[') || s.startsWith('*') || s.startsWith('=')) return false;
+            if(/^ey_/i.test(s)) return false; // example rows
+            // Video names end in "Video" and start with a letter — no underscore needed
+            return /^[A-Za-z].+Video$/i.test(s) && !/\bVideo (Start|25|50|75|100)\b/i.test(s);
+          });
+
         checklist = rows
           .map(r => String(r[bestCol] || '').trim())
           .filter(s => looksLikeLabel(s))
@@ -516,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             type:         inferType(s),
             url:          '',
           }))
-          .filter(item => item.type !== 'scroll' && item.type !== 'video quartile');
+          .filter(item => item.type !== 'scroll' && item.type !== 'video quartile' && item.type !== 'video');
 
         const zone = document.getElementById('uploadZone');
         if(zone) zone.classList.add('done');
@@ -584,7 +594,7 @@ function runQA() {
   if(jsonStr){
     const{events,bugs,error}=processJson(jsonStr,brand);
     if(error){
-      allResults.push({status:'bug',label:'JSON parse error',note:error,url:'',type:'error'});
+      allResults.push({status:'miss',label:'JSON parse error',note:error,url:'',type:'error'});
       statusEl.className='run-status err';
       statusEl.textContent='JSON parse failed — check pasted content';
       document.getElementById('runBtn').disabled=false;
@@ -592,7 +602,7 @@ function runQA() {
       return;
     }
     foundEvents = events;
-    for(const bug of bugs) allResults.push({status:'bug',label:bug.label,note:bug.note,url:bug.url,type:'hotspot'});
+    for(const bug of bugs) allResults.push({status:'miss',label:bug.label,note:bug.note,url:bug.url,type:'hotspot'});
     hasBugs = bugs.length > 0;
     statusEl.className='run-status ok';
     statusEl.textContent=`Done — ${brand} · ${events.length} events from JSON`;
@@ -604,27 +614,31 @@ function runQA() {
   }
 
   // ── Step 2: detect video presence ────────────────────────────────────
-  // Signal 1: JSON has a layer title ending in "Video"
-  let videoTitles = [];
+  // Videos appear in two forms in Ceros JSON:
+  //   A) Hotspot/image layers with title ending in " Video" (word boundary)
+  //   B) html-component iframe layers with camelCase title ending in "Video"
+  //      (e.g. "DellCountyofKauaiKauaiVideo") — Brightcove embeds
+  let videoTitles = [];    // form A — hotspot-tracked
+  let iframeVideos = [];   // form B — iframe embedded (no Ceros quartile tracking)
   if(jsonStr){
     try {
       const start = jsonStr.indexOf('{'), end = jsonStr.lastIndexOf('}');
       const data = JSON.parse(jsonStr.slice(start, end+1));
       for(const page of Object.values(data.pages||{})){
         for(const [,layer] of Object.entries(page.layerDictionary||{})){
-          if(layer.title && /\bVideo$/i.test(layer.title.trim())){
-            videoTitles.push(layer.title.trim());
+          if(!layer.title) continue;
+          const t = layer.title.trim();
+          if(layer.type === 'html-component' && /Video$/i.test(t)){
+            if(!iframeVideos.includes(t)) iframeVideos.push(t);
+          } else if(layer.type !== 'html-component' && /\bVideo$/i.test(t)){
+            if(!videoTitles.includes(t)) videoTitles.push(t);
           }
         }
       }
     } catch(e){}
   }
-  // Signal 2: checklist contains video or video quartile items
-  const checklistHasVideo = checklist.some(item =>
-    /video/i.test(item.correctLabel||item.rawLabel||'') ||
-    /^video/i.test(item.type||'')
-  );
-  const hasVideo = videoTitles.length > 0 || checklistHasVideo;
+  const allVideoTitles = [...videoTitles, ...iframeVideos];
+  const hasVideo = allVideoTitles.length > 0 || checklistVideoNames.length > 0;
 
   // ── Step 3: mandatory event checks ───────────────────────────────────
   // Scroll depth, social shares, and video quartiles must be PRESENT on every page.
@@ -635,7 +649,7 @@ function runQA() {
   const scrollEvents = foundEvents.filter(ev => ev.type === 'scroll');
   if(scrollEvents.length === 0){
     mandatorySection.push({
-      status:'bug', label:'Scroll tracking missing',
+      status:'miss', label:'Scroll tracking missing',
       note:'No scroll depth events detected — scroll script may not be implemented',
       url:'', type:'scroll', suggest:''
     });
@@ -643,7 +657,7 @@ function runQA() {
     for(const pct of ['25','50','75','100']){
       const found = scrollEvents.find(ev => ev.label.includes(pct));
       mandatorySection.push({
-        status: found ? 'pass' : 'bug',
+        status: found ? 'pass' : 'miss',
         label: found ? (found.label) : `Scroll ${pct} missing`,
         note: `scroll depth — mandatory`,
         url:'', type:'scroll', suggest: found ? '' : `Scroll ${pct} event not detected`
@@ -669,48 +683,102 @@ function runQA() {
     });
   }
 
-  // 3c. Video quartiles — only if video detected
+  // Add a visual separator for mandatory section
+  if(mandatorySection.length > 0){
+    allResults.push({status:'info', label:'── Mandatory events ──', note:'Scroll and social shares are required on every campaign', url:'', type:'section'});
+    allResults.push(...mandatorySection);
+    allResults.push({status:'info', label:'── Campaign-specific events ──', note:'From checklist or naming convention check', url:'', type:'section'});
+  }
+
+  // ── Video section (campaign-specific) ───────────────────────────────
+  // Videos are campaign-specific, not mandatory. Check naming convention
+  // and note whether quartile tracking is available.
+  const videoSection = [];
   if(hasVideo){
     const quartilePcts = ['Start','25','50','75','100'];
-    for(const videoTitle of videoTitles.length > 0 ? videoTitles : ['[Video]']){
-      // Derive short name from video title for the quartile label
-      const slug = videoTitle.replace(/\s*Video$/i,'').trim()
-        .split(/\s+/).slice(0,3)
-        .map(w=>w.replace(/[^A-Za-z0-9]/g,''))
-        .filter(Boolean).join('');
-      for(const pct of quartilePcts){
-        const expectedLabel = `${brand}_${slug}_Video ${pct}`;
-        const found = foundEvents.find(ev =>
-          ev.type==='quartile' &&
-          ev.label.includes(pct) &&
-          ev.label.toLowerCase().includes(slug.toLowerCase())
-        );
-        if(!found){
-          mandatorySection.push({
-            status:'warn', label:expectedLabel,
-            note:`video quartile — not found on page (video detected: "${videoTitle}")`,
-            url:'', type:'video quartile',
-            suggest:`Add to Ceros: ${expectedLabel}`
-          });
-        } else {
-          const v = validate(found.suggestedLabel||found.label);
-          mandatorySection.push({
-            status: v.ok ? 'pass' : 'warn',
-            label: found.suggestedLabel||found.label,
-            note: `video quartile — mandatory`,
-            url: '', type: 'video quartile',
-            suggest: v.ok ? '' : `Expected: ${v.eg}`
-          });
+    const videoNamesToCheck = checklistVideoNames.length > 0
+      ? checklistVideoNames
+      : allVideoTitles;
+
+    for(const expectedName of videoNamesToCheck){
+      const foundInJson = allVideoTitles.find(t =>
+        t.toLowerCase() === expectedName.toLowerCase()
+      );
+      const isIframe = iframeVideos.some(t =>
+        t.toLowerCase() === (foundInJson||expectedName).toLowerCase()
+      );
+
+      // Video name check
+      if(!foundInJson){
+        videoSection.push({
+          status:'miss',
+          label: expectedName,
+          note: `video name — on checklist but not found in page JSON`,
+          url:'', type:'video',
+          suggest:`Layer title in Ceros should be exactly: ${expectedName}`
+        });
+      } else {
+        videoSection.push({
+          status:'pass',
+          label: foundInJson,
+          note: isIframe
+            ? `video name ✓ — iframe embed (Brightcove). Quartile tracking not available via Ceros JSON — verify via GA Debugger on live page`
+            : `video name ✓`,
+          url:'', type:'video', suggest:''
+        });
+      }
+
+      // Quartile tracking — hotspot videos only, and only if video was found in JSON
+      // iframe/Brightcove videos fire quartile events client-side;
+      // they can't be read from the Ceros JSON.
+      if(foundInJson && !isIframe){
+        const slug = (foundInJson||expectedName).replace(/\s*Video$/i,'').trim()
+          .split(/\s+/).slice(0,3)
+          .map(w=>w.replace(/[^A-Za-z0-9]/g,''))
+          .filter(Boolean).join('');
+        for(const pct of quartilePcts){
+          const expectedLabel = `${brand}_${slug}_Video ${pct}`;
+          const found = foundEvents.find(ev =>
+            ev.type==='quartile' &&
+            ev.label.includes(pct) &&
+            ev.label.toLowerCase().includes(slug.toLowerCase())
+          );
+          if(!found){
+            videoSection.push({
+              status:'warn', label:expectedLabel,
+              note:`video quartile — not found on page`,
+              url:'', type:'video quartile',
+              suggest:`Add to Ceros: ${expectedLabel}`
+            });
+          } else {
+            const v = validate(found.suggestedLabel||found.label);
+            videoSection.push({
+              status: v.ok ? 'pass' : 'warn',
+              label: found.suggestedLabel||found.label,
+              note:`video quartile`,
+              url:'', type:'video quartile',
+              suggest: v.ok ? '' : `Expected: ${v.eg}`
+            });
+          }
         }
       }
     }
-  }
 
-  // Add a visual separator for mandatory section
-  if(mandatorySection.length > 0){
-    allResults.push({status:'info', label:'── Mandatory events ──', note:'Scroll, social shares and video quartiles are required on every campaign', url:'', type:'section'});
-    allResults.push(...mandatorySection);
-    allResults.push({status:'info', label:'── Campaign-specific events ──', note:'From checklist or naming convention check', url:'', type:'section'});
+    // If no checklist, surface any iframe videos found in JSON
+    if(checklistVideoNames.length === 0 && iframeVideos.length > 0){
+      for(const t of iframeVideos){
+        videoSection.push({
+          status:'info',
+          label: t,
+          note:`iframe/Brightcove video — quartile tracking not available via Ceros JSON. Verify naming and quartile events via GA Debugger on live page.`,
+          url:'', type:'video', suggest:''
+        });
+      }
+    }
+
+    if(videoSection.length > 0){
+      allResults.push(...videoSection);
+    }
   }
 
 
@@ -822,7 +890,7 @@ function renderStats(){
   const real = allResults.filter(r=>r.type!=='section');
   document.getElementById('s-pass').textContent=real.filter(r=>r.status==='pass').length;
   document.getElementById('s-warn').textContent=real.filter(r=>r.status==='warn').length;
-  document.getElementById('s-bug').textContent=real.filter(r=>r.status==='bug').length;
+  
   document.getElementById('s-miss').textContent=real.filter(r=>r.status==='miss').length;
   document.getElementById('s-total').textContent=real.length;
 }
@@ -837,8 +905,8 @@ function doFilter(f,btn){
     list.innerHTML='<div class="empty"><div class="empty-t">All clear</div><div class="empty-s">Nothing in this category.</div></div>';
     return;
   }
-  const bmap={pass:'pass',warn:'warn',bug:'bug',miss:'miss',info:'info'};
-  const lmap={pass:'Pass',warn:'Fix',bug:'Bug',miss:'Missing',info:'Tip'};
+  const bmap={pass:'pass',warn:'warn',miss:'miss',info:'info'};
+  const lmap={pass:'Pass',warn:'Fix',miss:'Missing',info:'Tip'};
   list.innerHTML=filtered.map(r=>{
     if(r.type==='section') return `<div class="ev-section">${esc(r.label)}</div>`;
     const cls=bmap[r.status]||'info', txt=lmap[r.status]||r.status;
