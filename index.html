@@ -186,7 +186,7 @@
   </div>
 
   <div class="run-row">
-    <button class="run-btn" id="runBtn" onclick="runQA()">Run QA check</button>
+    <button class="run-btn" id="runBtn" onclick="runQA()" disabled>Run QA check</button>
     <span class="run-status" id="runStatus"></span>
   </div>
 
@@ -534,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const us = document.getElementById('uploadSub');  if(us) us.textContent = `${checklist.length} events loaded`;
         const st3 = document.getElementById('st3');
         if(st3){ st3.textContent = `✓ ${checklist.length} events`; st3.className = 'step-pill done'; }
+        document.getElementById('runBtn').disabled = false;
       } catch(err) {
         alert('Could not read file: ' + err.message);
       }
